@@ -775,3 +775,13 @@ there is two way to handle metadat
     next js will automatically serve these files at the root of your application
      its about the files should be right named
      file based metadata have higher priority over config based metadata
+
+
+     to add eslint and prettier support in next js app directory
+     install the necessary packages
+     ```bash
+     npm install --save-dev eslint prettier eslint-config-prettier eslint-plugin-prettier
+     ```
+     standardjs.com/rules for eslint rules
+     npm i eslint-config-standard-with-typescript --save-dev add end --legacy-peer-deps
+     https://medium.com/@keshavkattel1998/setting-up-a-robust-next-js-e79b89e7d44e
