@@ -688,3 +688,90 @@ like marketing pages or documentation sites etch
  regardless of any dynamic content
  this is useful for optimizing performance for pages that can be fully pre rendered
  like marketing pages or documentation sites etch
+
+
+## **API Routes** 🛣️
+
+in next js app directory
+create a folder named api inside app folder
+inside api folder create files and folders to define your api endpoints
+for example create a file named hello.ts inside api folder
+this file will be mapped to the /api/hello endpoint of the application
+inside hello.ts file export functions to handle different http methods
+for example export an async function named GET to handle get requests
+```ts
+export async function GET(request: Request) {
+  return new Response('Hello, Next.js API!');
+}
+```
+this function will be called when a get request is made to the /api/hello endpoint
+you can also export functions for other http methods like POST,PUT,DELETE etch
+this allows you to build backend functionality directly within your next js application
+
+api-->db.ts - books(folder)->routes.ts
+create a file named db.ts inside api folder
+this file will be used to define database connection and operations
+create a folder named books inside api folder
+inside books folder create a file named routes.ts
+this file will be used to define api routes related to books
+inside routes.ts file export functions to handle different http methods for book operations
+for example export an async function named GET to handle get requests for books
+/api/books --> get all books
+/api/books/:id --> get book by id inside books foler [id].ts folder and create route.ts file to get book by id
+/api/books --> POST create a new book
+/api/books/:id --> PUT update book by id
+/api/books/:id --> DELETE delete book by id
+this structure allows you to organize your api routes and database operations in a modular way
+
+## **SEO & Metadata Management**   📈
+next js app directory provides built in support for managing metadata and improving seo
+there is two way to handle metadat
+1. config based
+  all you have to do is creat js object in the layout or page file and export it as metadata
+  ```ts
+  export const metadata: Metadata = {
+    title: "My Next.js App",
+    description: "This is my awesome Next.js application.",
+    keywords: ["Next.js", "React", "SEO", "Metadata"],
+    authors: [{ name: "Ami" }],
+    openGraph: {
+      title: "My Next.js App",
+      description: "This is my awesome Next.js application.",
+      url: "https://www.my-nextjs-app.com",
+      siteName: "My Next.js App",
+      images: [
+        {
+          url: "https://www.my-nextjs-app.com/og-image.jpg",
+          width: 800,
+          height: 600,
+        },
+      ],
+      locale: "en_US",
+      type: "website",
+    },
+  };
+  ```
+  higher level metadata defined in layout files will be inherited by nested pages and layouts
+  you can also override specific metadata fields in nested pages and layouts as needed
+  its static  metadata
+  dynamic metadata
+  for dynamic metadata you can create an async function named generateMetadata in your page or layout file
+
+    ```ts
+    export async function generateMetadata({ params }): Promise<Metadata> {
+      const data = await fetchData(params.id);
+      return {
+        title: data.title,
+        description: data.description,
+        // other metadata fields
+      };
+    }
+    ```
+    this function will be called during the server side rendering process to fetch dynamic metadata based on the route parameters or other data sources
+
+    2 file based metadata
+    you can also define metadata using a dedicated metadata.ts file in your app directory
+    you can pu t files like robot.txt,sitemap.xml etc in the app directory
+    next js will automatically serve these files at the root of your application
+     its about the files should be right named
+     file based metadata have higher priority over config based metadata
