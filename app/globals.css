@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Inter Variable";
+  src: url("./fonts/interVF.ttf") format("truetype-variations");
+}
+@font-face {
+  font-family: "Space Grotesk Variable";
+  src: url("./fonts/spacegroteskVF.ttf") format("truetype-variations");
+}
 @import "tailwindcss";
 
 @plugin "@tailwindcss/typography";
@@ -5,6 +13,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+
+  --font-inter: "Inter Variable", sans-serif;
+  --font-space-grotesk: "Space Grotesk Variable", sans-serif;
+
   --color-primary-100: #fff1e6;
   --color-primary-500: #ff7000;
 

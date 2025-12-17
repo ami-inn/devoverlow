@@ -3,7 +3,7 @@ import React from 'react'
 const Home = () => {
   return (
     <div>
-      <h2 className='h2-bold text-light400_light500'>
+      <h2 className='h2-bold font-space-grotesk'>
         Welcome to Next.js!
       </h2>
     </div>
