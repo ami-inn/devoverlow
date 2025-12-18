@@ -704,6 +704,7 @@ export async function GET(request: Request) {
   return new Response('Hello, Next.js API!');
 }
 ```
+<!-- 1 -->
 this function will be called when a get request is made to the /api/hello endpoint
 you can also export functions for other http methods like POST,PUT,DELETE etch
 this allows you to build backend functionality directly within your next js application
@@ -785,3 +786,136 @@ there is two way to handle metadat
      standardjs.com/rules for eslint rules
      npm i eslint-config-standard-with-typescript --save-dev add end --legacy-peer-deps
      https://medium.com/@keshavkattel1998/setting-up-a-robust-next-js-e79b89e7d44e
+
+
+     client and server paradigm
+
+     how can we do that
+
+     client means the device that u defer using. the device that send req to server and display the pages 
+     refer the article vercel
+     less code btter ux fetching data faster withthe nextjs 13 app router
+
+     app director introudced for to resolve the issue
+     not only pages component lever server side rendering
+
+     we now have the option to choose where to render the specific component and instance
+
+     tow type components
+     server side components
+     client side components
+
+     the benefit of storing component on serverside we can save user browsers doing extra work for showing the js to display the component initial page fast
+
+     server side rendering
+     smaler js bundle size
+     enhanced seo
+     faster initial page load for better acessibility and user exp
+     efficient utilization of server resources
+
+     when to decide what to render wehre
+
+     based on the component does
+     if component needs user to interact with
+     clicking buttons
+     entering information in input fields
+     triggering events
+     using react hooks
+     it should be client component
+
+     if component doesnt require any user interaction
+     fetch data from server
+     display static content
+     it should be server component
+
+     next js doc provide table where to render which component
+     
+     all components default server components unless its specify
+
+     server componetns are guarenteed to be only rendered on the server
+     client component primarly rendered on the lcient side
+     
+     in next js when we use use client in a file all other module imported in that file including child server components are treated as aprt of the client module
+
+     different strategies to display 
+
+     rendering
+     it a process of generating or creating the user interface from the code we werite react 18 and next js introduced different strategies to rtender an application believe it or not we can use multiple strategies within the same application to render it differently the god mode feature of nextjs although we dit talk about it a bit
+
+     there are two environments where we can render the code
+     client user browser
+     server where we deploy
+
+     client side
+     renderign process = occurs on the users browser
+     interactivity and loadtime = provides a dynamic and interactive user exp
+     fetching and seo = smoother transition between the pages and real time data fetching
+     load and performance = reduced server load and potential lower hosting costs as the clients browser is responsible for handling the rendering
+     consistend and rendering = compatibility and performance depend on the users device configuratrion
+     security = poterntial risk of resurity vulnerabilites such as corss site scription code inection data exposure
+
+     server side
+     rendering process  = happens on the server befor sending the page to th clients browser
+     interactivityloadtime = provides a fully rendered html page to the client resulting in faster intitial page load time
+     fetchingseo = fully rendered content enchancing search engine rankings ans social medika sharing previdews
+     load perfor = poerforms well on any slower devuice as rendering is done on the server
+
+    consistendrender = consistend rendering across any devices regardless of the configuration reducing the risk of compatibiltiy issues
+    security = reduces the amoyutn of client side js code sent to users browser thus enhancing security by limiting potential vulnerabiliteis
+
+    b2b domain use server side use
+    once the compoilation process is complete which involves converting code from a highere level programming lang to a lower level represntatin our app goes through towo crucial phaswes build and run time
+
+    build time 
+    sereis of steps wh3ere we prepatre our application code for production involving the steps of code complilation bundling optimization
+
+    buildtime or compile time is the thime of compiling code
+    npm run dev its that commang that denrated the builld of our app containing all the necessary static files bundling optimization dependency resolution etc
+
+    runtime it rferts to the ime period when the compiled application is actively exucuting and running involving the dynamic exec of application code and utilizxation system resouldce 
+
+    run time is period when user run the application
+    its about handling user intereation such a user input respondint to events to data processing suca s manipulating accessing data dn interating wioth external services or apis
+
+    runtime environment a specific environment in which a program or application runs druing its execution
+    it provides a set of libraries services or runtime componnets that support hte execution of the program
+
+    the nodejs is a js runtime environment that allow us developers to run js code outside of the web browser
+    similarly next js provides 2 different run time environments to exexute the app code
+
+    the nodejs runtime 
+    default runtime that has acess to all nodejs apis and ecosystyem
+
+    the edge runtime 
+    a light weight runtime base on web apis with supprt to a limited suster of nodejs api
+    next js offers the flexibility of choosing the runtime you can do switch swiftly by changing one word
+
+    rendering strategies
+    three strategies for rendering on the server
+    static site generation
+    incremental site generation 
+    ssr
+     
+
+     ssg = happen at build time on the server during the build process the content is genreated and converted into html css and js files it doesnt require server interaciton during runtime
+     the generated static files can be hosted on content delivery network and then served to the client as is
+     the result the rendered content is cached and reused on subsequen requestes leading to fast contendt delivery and less server load this minimal processing results in higher performance
+     ex doc or blog and news websiteds article content are static once biult we can sip it as it is whwenever we want to update the contend we can rebuild it
+
+     isg
+     it allows us to update these static pages after we build them without needing to rebuild the entire site
+     the ondemand generation of isr allows us to generate a specific page on demand or in response to a users request meaning a ceratin part of the websites or pages will be rendered at build time while other is genrated only when needed at run time
+     reduces buld time and improve overall performance of the website
+     with hybrid stratedgy we now have the flexiblity to manage content updates we can cache the static ocntent as welll as revalidate them if needed ssg for article detail isg for showing a list of articles
+
+
+     when to use which
+     will this page or content display the same info for each req
+     yes - ssg
+
+     no - does this page or content requre frequent information unpdates potentialy every  second
+     - yes -ssr
+     - no- isg
+     
+
+     using next-themes
