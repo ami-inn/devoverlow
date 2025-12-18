@@ -1,7 +1,6 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
-import tailwindcss from "eslint-plugin-tailwindcss";
 import prettier from "eslint-plugin-prettier";
 
 export default defineConfig([
@@ -19,7 +18,7 @@ export default defineConfig([
   },
 
   // Tailwind CSS
-  ...tailwindcss.configs["flat/recommended"],
+  // (Removed) Tailwind CSS plugin is incompatible with Tailwind v4
 
   // Ignore Next.js build artifacts
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
