@@ -557,3 +557,14 @@ for authentication using authjs is know n as next-auth in nxtjs
 
 npm install next-auth@beta
 npx auth secret
+
+for to setup github
+got to settings -> developer settings -> OAuth Apps -> New OAuth App
+add the callback url as http://localhost:3000/api/auth/callback/github
+after that copy the client id and client secret to .env.local file as shown below
+AUTH_GITHUB_ID = "your_github_client_id"
+AUTH_GITHUB_SECRET = "your_github_client_secret"
+
+auth flow of github
+
+user -> clicks signin with github -> initiate auth request to next-auth -> next-auth redirects to github -> user authenticates on github -> github redirects back to next-auth with auth code -> next-auth exchanges auth code for access token -> next-auth retrieves user info from github using access token -> next-auth creates a session for the user (session store on cookies ) -> user is redirected back to the application with an authenticated session

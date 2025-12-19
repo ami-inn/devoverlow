@@ -4,6 +4,9 @@ import localFont from "next/font/local";
 
 import "./globals.css";
 import ThemeProvider from "@/context/Theme";
+import { Toaster } from "sonner";
+import { auth } from "@/auth";
+import { SessionProvider } from "next-auth/react";
 
 const inter = localFont({
   src: "./fonts/interVF.ttf",
@@ -24,14 +27,14 @@ export const metadata: Metadata = {
   icons: "/images/site-logo.svg",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+const RootLayout  = async ({ children }: { children: React.ReactNode }) => {
+  const session = await auth();
+
   return (
     <html lang="en" suppressHydrationWarning>
       {/* not an issue will only surpress hyderation warning one level deep */}
+     
+     <SessionProvider session={session}>
       <body
         className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}
       >
@@ -43,7 +46,11 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        <Toaster />
       </body>
+      </SessionProvider>
     </html>
   );
-}
+};
+
+export default RootLayout;
