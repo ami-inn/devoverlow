@@ -265,7 +265,7 @@
 }
 
 @utility invert-colors {
-  @apply invert dark:invert-0;
+  @apply invert dark:invert-0; 
 }
 
 @utility shadow-light100_dark100 {
@@ -314,6 +314,13 @@
 
 @utility flex-between {
   @apply flex justify-between items-center;
+}
+
+@utility bg-auth-light {
+  @apply bg-[var(--background-image-auth-light)] ;
+}
+@utility bg-auth-dark {
+  @apply bg-[var(--background-image-auth-dark)] ;
 }
 
 @utility flex-start {
