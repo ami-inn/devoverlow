@@ -568,3 +568,13 @@ AUTH_GITHUB_SECRET = "your_github_client_secret"
 auth flow of github
 
 user -> clicks signin with github -> initiate auth request to next-auth -> next-auth redirects to github -> user authenticates on github -> github redirects back to next-auth with auth code -> next-auth exchanges auth code for access token -> next-auth retrieves user info from github using access token -> next-auth creates a session for the user (session store on cookies ) -> user is redirected back to the application with an authenticated session
+
+google auth setp
+got to google cloud console -> credentials -> create credentials -> OAuth 2.0 Client IDs
+create project if not created
+add the callback url as http://localhost:3000/api/auth/callback/google
+after that copy the client id and client secret to .env.local file as shown below
+AUTH_GOOGLE_ID="your_google_client_id"
+AUTH_GOOGLE_SECRET="your_google_client_secret"
+ 
+ modify the functionalities
