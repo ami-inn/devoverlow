@@ -552,4 +552,8 @@ https://roadmap.sh/guides/basics-of-authentication
 jwt authentication
 https://roadmap.sh/guides/jwt-authentication
 
-HTTP State Management
+
+for authentication using authjs is know n as next-auth in nxtjs
+
+npm install next-auth@beta
+npx auth secret
