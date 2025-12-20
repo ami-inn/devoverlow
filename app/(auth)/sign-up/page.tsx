@@ -9,7 +9,13 @@ const Signup = () => {
       <AuthForm
         formType="signup"
         schema={signUpSchema}
-        defaultValues={{ email: "", password: "",name: "", username: "", confirmPassword: "" }}
+        defaultValues={{ 
+          name: "",
+          username: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+         }}
         onSubmit={(data) => Promise.resolve({ success: true, data })}
       />
     </div>
