@@ -6,10 +6,14 @@ import ROUTES from '@/constants/routes';
 import Image from 'next/image';
 import { Button } from '../ui/button';
 import { LogOut } from 'lucide-react';
+import { auth, signOut } from '@/auth';
 
-const LeftSidebar = () => {
-   const userId = null; // Replace with actual user authentication logic
-    return (
+const LeftSidebar = async () => {
+    const session = await auth();
+    console.log("Session in LeftSidebar:", session);
+  const userId = session?.user
+  console.log("User ID in LeftSidebar:", userId);
+   return (
      <section className="custom-scrollbar background-light900_dark200 light-border sticky left-0 top-0 flex h-screen flex-col justify-between overflow-y-auto border-r p-6 pt-36 shadow-light-300 dark:shadow-none max-sm:hidden lg:w-[266px]">
       <div className="flex flex-1 flex-col gap-6">
         <NavLinks />
@@ -20,7 +24,7 @@ const LeftSidebar = () => {
             action={async () => {
               "use server";
 
-            //   await signOut();
+              await signOut();
             }}
           >
             <Button
