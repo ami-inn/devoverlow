@@ -44,6 +44,7 @@ const AuthForm = <T extends FieldValues>({
 
   const handleFormSubmit: SubmitHandler<T> = async (data) => {
     try {
+        // authenticate user
       await onSubmit(data);
       toast.success(
         formType === "signup" ? "Signup Successful" : "Sign-In Successful"
@@ -111,7 +112,7 @@ const AuthForm = <T extends FieldValues>({
             </Link>
           </p>
         ) : (
-          <p>
+            <p>
             Already have an account?{" "}
             <Link
               href={ROUTES.SIGN_IN}
