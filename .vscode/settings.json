@@ -17,8 +17,7 @@
   // "javascript.inlayHints.parameterNames.enabled": "none",
   // "javascript.inlayHints.variableTypes.enabled": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.addMissingImports": "explicit"
+    "source.fixAll.eslint": "explicit"
   },
   "css.validate": false,
   "scss.validate": false,
