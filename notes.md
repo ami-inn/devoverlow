@@ -552,29 +552,537 @@ https://roadmap.sh/guides/basics-of-authentication
 jwt authentication
 https://roadmap.sh/guides/jwt-authentication
 
+<!-- 3 -->
 
-for authentication using authjs is know n as next-auth in nxtjs
+## **Authentication with NextAuth (next-auth)** 🔐
 
+NextAuth.js (also known as Auth.js) is the recommended authentication solution for Next.js applications.
+
+### **Installation**
+
+Install the beta version of NextAuth:
+
+```bash
 npm install next-auth@beta
 npx auth secret
+```
 
-for to setup github
-got to settings -> developer settings -> OAuth Apps -> New OAuth App
-add the callback url as http://localhost:3000/api/auth/callback/github
-after that copy the client id and client secret to .env.local file as shown below
-AUTH_GITHUB_ID = "your_github_client_id"
-AUTH_GITHUB_SECRET = "your_github_client_secret"
+### **GitHub OAuth Setup** 🐙
 
-auth flow of github
+**Step 1: Register OAuth App**
 
-user -> clicks signin with github -> initiate auth request to next-auth -> next-auth redirects to github -> user authenticates on github -> github redirects back to next-auth with auth code -> next-auth exchanges auth code for access token -> next-auth retrieves user info from github using access token -> next-auth creates a session for the user (session store on cookies ) -> user is redirected back to the application with an authenticated session
+1. Go to GitHub Settings → Developer Settings → OAuth Apps
+2. Click "New OAuth App"
+3. Add the callback URL: `http://localhost:3000/api/auth/callback/github`
+4. Copy the Client ID and Client Secret
 
-google auth setp
-got to google cloud console -> credentials -> create credentials -> OAuth 2.0 Client IDs
-create project if not created
-add the callback url as http://localhost:3000/api/auth/callback/google
-after that copy the client id and client secret to .env.local file as shown below
+**Step 2: Configure Environment Variables**
+
+Add the credentials to your `.env.local` file:
+
+```env
+AUTH_GITHUB_ID="your_github_client_id"
+AUTH_GITHUB_SECRET="your_github_client_secret"
+```
+
+**GitHub Authentication Flow:**
+
+```
+1. User clicks "Sign in with GitHub"
+2. Initiate auth request to NextAuth
+3. NextAuth redirects to GitHub
+4. User authenticates on GitHub
+5. GitHub redirects back to NextAuth with authorization code
+6. NextAuth exchanges auth code for access token
+7. NextAuth retrieves user info from GitHub using access token
+8. NextAuth creates a session for the user (session stored in cookies)
+9. User is redirected back to the application with an authenticated session
+```
+
+### **Google OAuth Setup** 🔴
+
+**Step 1: Create OAuth Credentials**
+
+1. Go to Google Cloud Console
+2. Navigate to Credentials → Create Credentials → OAuth 2.0 Client IDs
+3. Create a project if you haven't already
+4. Add the callback URL: `http://localhost:3000/api/auth/callback/google`
+5. Copy the Client ID and Client Secret
+
+**Step 2: Configure Environment Variables**
+
+Add the credentials to your `.env.local` file:
+
+```env
 AUTH_GOOGLE_ID="your_google_client_id"
 AUTH_GOOGLE_SECRET="your_google_client_secret"
- 
- modify the functionalities
+```
+
+---
+
+## **State Management** 🗂️
+
+ We didn’t really define state management. So just to do some formalities —
+
+State management is like keeping track of everything happening in your application.
+Insight
+
+Imagine you're playing a game and need to remember your score, level, and items collected. State management is like having a scoreboard and inventory list to track all this information so you can play smoothly. It's about organizing and updating data so your app knows what's happening and can react accordingly.
+
+There are two types of state management
+
+    Local
+    Global
+
+Local State Management
+Local State Management
+
+It typically involves managing the data within a single component or module of an application. This local state is specific to that component and is not directly accessible or modifiable by other parts of the application unless explicitly passed down as props or through other means.
+
+For example, (everyone’s favorite)
+Counter.jsx
+
+import React, { useState } from "react";
+
+const Counter = () => {
+  // Local state variable 'count'
+  const [count, setCount] = useState(0);
+
+  // Update local state 'count'
+  const increment = () => {
+    setCount(count + 1);
+  };
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={increment}>Increment</button>
+    </div>
+  );
+};
+
+export default Counter;
+
+---
+
+## **Global State Management** 🌐
+
+Global state management involves managing data that needs to be accessed and modified by multiple components across the application. This global state is typically stored in a centralized location, such as a global store or context, where it can be accessed and modified by any component that needs it without the need for prop drilling or passing data through multiple layers of components.
+
+### **Example: Context API**
+
+**CounterProvider.jsx**
+
+```jsx
+import React, { createContext, useContext, useState } from "react";
+
+// Create a global context
+const CounterContext = createContext();
+
+// Create a provider to manage global state
+const CounterProvider = ({ children }) => {
+  // Global state variable 'count'
+  const [count, setCount] = useState(0);
+
+  // Update global state 'count'
+  const increment = () => {
+    setCount(count + 1);
+  };
+
+  return (
+    <CounterContext.Provider value={{ count, increment }}>
+      {children}
+    </CounterContext.Provider>
+  );
+};
+
+// Custom hook to access global state and updater
+const useCounter = () => {
+  return useContext(CounterContext);
+};
+
+export { CounterProvider, useCounter };
+```
+
+### **Using the Provider**
+
+Next, import the provider into the main starting file of the application, wrapping everything inside it. This makes the provider the main parent of the application.
+
+**App.jsx**
+
+```jsx
+import Counter from "./Counter";
+import { CounterProvider } from "./CounterProvider";
+
+const App = () => {
+  return (
+    <CounterProvider>
+      <div className='App'>
+        <h1>Counter App</h1>
+        <Counter />
+      </div>
+    </CounterProvider>
+  );
+};
+
+export default App;
+```
+
+### **Accessing Global State**
+
+Utilize or access the global state in any component whose parent is CounterProvider.
+
+**Counter.jsx**
+
+```jsx
+import { useCounter } from "./CounterProvider";
+
+// Component using global state
+const Counter = () => {
+  // Access global state and updater
+  const { count, increment } = useCounter();
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={increment}>Increment</button>
+    </div>
+  );
+};
+```
+
+But using Context API isn’t the only solution in React.js. We have many options. Out of which, few have really grabbed industries’ attention by the way they solve some unique problems related to global state management.
+Top Global State Management Libraries:
+
+    Redux: Redux helps organize your app's data in one place using actions and reducers.
+    Zustand: Zustand is a simple way to handle your app's data using React hooks.
+    Context API: Context API shares data across your app without needing extra libraries.
+    Recoil: Recoil makes managing data in React easier with atoms and derived states.
+    MobX: MobX makes it easy to watch and update your data without extra setup.
+
+Insight
+
+💡 Check out this must-read documentation on Context API by the React team.
+
+It's important to understand that there isn't a single "best" library among the others. Each one offers a unique approach to state management and addresses different problems more effectively.
+
+Rather than debating with developers on Twitter, consider your specific problem and choose the library that best suits your needs.
+
+So, to summarize, the main difference between these types is in the scope of the data being managed.
+
+All the libraries we discussed earlier are popular and widely used, but then Next.js entered the scene—especially with Next.js.
+
+By now, we know what Next.js does, what it’s about, and how it differs from previous versions or React.js in general.
+
+If you guessed it, you’re right. Using those libraries or methods we discussed earlier in Next.js would turn your page or component into a client-side component. This goes against the core of Next.js and its server-side capabilities.
+
+Transitioning everything to the client side in Next.js would essentially equate to using plain React.js.
+
+Since Redux, Context API, Zustand, and others are all hook-based patterns, we can't use them on the server side, at least not for now. So, that's the issue.
+Insight
+
+💡 Why can’t we use Hooks on the server side?
+
+React hooks rely on the component lifecycle, which is specific to the client-side rendering environment.
+
+Hooks like useState, useEffect, or any other aren't available on the server because they interact with the DOM, which doesn't exist on the server.
+
+However, you can simulate some hook behavior on the server using libraries like react-dom/server, but it's not the same as client-side hooks.
+
+So what’s the solution to this problem? Is there even one? Or should we just stick to using these libraries whenever we want, without considering anything else? What should we do?
+
+Yes, yes, we have answers to each one of them. It's not new; in fact, it's an old-school approach that most big companies have used, but it hasn't received the attention it deserves. It's pretty underrated.
+
+Have you noticed what happens when you visit any e-commerce website like Amazon and search for something?
+
+Let’s try it now. Visit the Amazon website, and search for anything that you like. Maybe that MacBook you have been wanting to buy for a long time or that chocolate of yours? Search it
+
+But while searching, keep an eye on “URL”.
+
+Now search.
+
+If you notice carefully enough, you’ll see whatever you typed in the search box will appear in the URL as is.
+Amazon SS
+
+If I share that URL with you here and if you open it. You should be able to see the same exact results.
+
+This, my friend, is URL as a state management. You won’t see the same effect with other ways of state management.
+
+Lots of websites, not just Amazon, use URLs as state management to keep track of stuff. Even Supabase does it.
+
+For example, I wanted to check how many people bought our Ultimate Next.js course. So, I clicked on a filter, and the web address changed to show that filter.
+
+https://supabase.com/dashboard/project/xxxxxxxxxxxxxxxxxxxx/editor/xxxxx?filter=course_name%3Aeq%3Aultimate-next-js-13-course-ebook&sort=created_at%3Adesc
+
+You see, it's completely legal and actually considered a best practice. By managing state via the URL, you can easily share links, and when someone else opens that link, they'll see the same result as you did. This also helps improve SEO.
+Insight
+
+💡 How does URL as a state management improve SEO?
+
+When you use unique URLs to represent different states or pages within your website, each URL serves as a distinct entry point for search engines to crawl and index your content.
+
+This means that all the variations of your content, such as different filters, sorting options, or pagination, have their own URLs, making it easier for search engines to discover and rank your pages appropriately.
+
+In simple terms, imagine your website is like a big library, and each URL is like a unique bookshelf. When you organize your books (content) on different bookshelves (URLs), it's easier for people (search engines) to find the specific book (content) they're looking for.
+
+This organization helps improve your website's visibility and ranking in search engine results because search engines can better understand the structure and relevance of your content.
+
+Using unique URLs for different states or pages also makes it easier for users to share specific content and for search engines to understand the context of that content, which ultimately can lead to better search engine rankings for your website.
+
+So is it something new in Next.js?
+
+Not at all. You can do the URL state management in React too.
+
+URL state management is so underrated in the dev field that it took almost a new Next.js release to make us realize how powerful it is. Otherwise, we'd just keep using states all over the place.
+
+
+Before we get started with understanding how we can do URL state management in Next.js, let’s see how we can get various URL info in Next.js
+
+A URL (Uniform Resource Locator) with parameters typically consists of several components:
+
+    Scheme: Specifies the protocol used to access the resource, such as http:// or https://.
+
+    Domain: The domain name or IP address of the server hosting the resource.
+
+    Port: (Optional) Specifies the port number to which the request should be sent. Default ports are often omitted (e.g., port 80 for HTTP, port 443 for HTTPS).
+
+    Path: The specific resource or endpoint on the server, typically represented as a series of directories and filenames.
+
+    Query Parameters: (Also known as searchParams in Next.js) Additional data sent to the server as part of the request, typically used for filtering or modifying the requested resource. Query parameters are appended to the URL after a question mark "?" and separated by ampersands "&"
+
+    For example: ?param1=value1¶m2=value2
+
+    Fragment: (Optional) Specifies a specific section within the requested resource, often used in web pages to navigate to a particular section. It is indicated by a hash "#" followed by the fragment identifier.
+
+We can retrieve this URL information in Next.js in different ways:
+
+    Page If you’re on the main page file, then you can access the information through page props
+
+    function Page({ params, searchParams }) {
+      return <h1>My Page</h1>;
+    }
+
+    export default Page;
+
+For example, If the URL looks like this: /books/1234/?page=2&filter=latest
+
+Then,
+
+    params will hold the 1234 value
+    searchParams will hold page & filter values This is how you can get the info
+
+async function Page({ params, searchParams }) {
+  const { id } = await params;
+  const { page, filter } = await searchParmas;
+
+  return <h1>My Page</h1>;
+}
+export default Page;
+
+Insight
+
+💡 You can learn more about params and searchParams here
+
+From here, you can choose to pass these values to other components or use other options to access them specifically inside that component And that other way is,
+
+Hooks Next.js provides two specific hooks, namely useParams and useSearchParams, to retrieve the respective information from the URL This is how we can access params (dynamic part of the URL)
+
+"use client";
+
+import { useParams } from "next/navigation";
+
+function ExampleClientComponent() {
+  const params = useParams();
+
+  return <p>Example Client Component</p>;
+}
+
+export default ExampleClientComponent;
+
+Insight
+
+You can learn more about useParams hook here. We can access searchParams (aka query parameters) of URL in the same way, using the useSearchParams hook
+
+"use client";
+
+import { useSearchParams } from "next/navigation";
+
+export default function SearchBar() {
+  const searchParams = useSearchParams();
+  const type = searchParams.get("type");
+
+  return <>Selected Type: {type}</>;
+}
+
+    Insight
+
+    Learn more about the useSearchParams hook here.
+
+Yes, you’re right. Using hooks would mean turning that component into a client component.
+
+As a rule of thumb, if your component is near its parent Page, then instead of opting for these hooks, you can pass params and searchParams of Page props to its respective children. A bit of prop drilling won’t hurt.
+
+But if the component is far away from Page, you should use the above-mentioned hooks instead.
+
+Now that you know how to access information from the URL, let’s see how we can add any kind of information to the URL in Next.js
+
+
+As I said, it’s not related to Next.js. You can do it in React.js too. But preferring URL as state management in Next.js will solve 90% of your problems and save you from making everything client-side
+
+So how do we do that?
+
+Think, what happened when we visited Amazon. We typed something, hit enter, and the same thing appeared in the URL. Do the same for filters. Select something, and it appears in the URL.
+
+Got it?
+
+Yeah, so all we have to do is, whenever a user types something or selects something, we add that selected or typed info in the URL.
+
+There are many ways. Let’s see how we can do that one by one using Next.js
+
+    Next.js Link
+
+    It’s straightforward. For example,
+
+    <Link
+      href={{
+        pathname: "/jobs",
+        query: { type: "softwaredeveloper" },
+      }}
+    >
+      All Jobs
+    </Link>
+
+And doing this will result in /jobs?type=softwaredeveloper
+
+Whatever your query is, you specify it inside the href, and whenever someone clicks on it, it’ll form the right URL with that corresponding query
+Link Ref
+faviconhttps://nextjs.org/docs/app/api-reference/components/link#href-required
+thumbnail
+
+Next.js Router
+
+You can use the Next.js useRouter hook and route to any page with a query like this
+
+"use client";
+
+import { useRouter } from "next/navigation";
+
+const MyComponent = () => {
+  const router = useRouter();
+
+  const handleButtonClick = () => {
+    router.push({
+      pathname: "/search",
+      query: { q: "your_search_query_here" },
+    });
+  };
+
+  return <button onClick={handleButtonClick}>Search</button>;
+};
+
+export default MyComponent;
+
+And doing this will result in /search?q=your_search_query_here
+Insight
+
+💡 Yes, you’re right. Using useRouter will turn your page/component into a client page/component. So be careful when you want to use it
+
+Programmatically
+
+We can use a built-in JavaScript object, URLSearchParams, to create a new URL and navigate to it using useRouter or window.location
+
+Here is a short sweet example of that,
+
+const handleButtonClick = () => {
+  const searchParams = new URLSearchParams(window.location.search);
+  searchParams.set("q", "your_search_query_here");
+
+  window.location.href = `${window.location.pathname}?${searchParams.toString()}`;
+};
+
+Learn more about URLSearchParams here:
+URLSearchParams
+faviconhttps://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
+thumbnail
+
+For a few of you, this might feel a bit too much. But this can come super handy when we’ve to change URL parameters frequently on user actions. For example, when doing a filter. Here is what it would look like
+
+export const updateSearchParams = (type: string, value: string) => {
+  // Get the current URL search params
+  const searchParams = new URLSearchParams(window.location.search);
+
+  // Set the specified search parameter to the given value
+  searchParams.set(type, value);
+
+  // Set the specified search parameter to the given value
+  const newPathname = `${window.location.pathname}?${searchParams.toString()}`;
+
+  return newPathname;
+};
+
+export const deleteSearchParams = (type: string) => {
+  // Set the specified search parameter to the given value
+  const newSearchParams = new URLSearchParams(window.location.search);
+
+  // Delete the specified search parameter
+  newSearchParams.delete(type.toLocaleLowerCase());
+
+  // Construct the updated URL pathname with the deleted search parameter
+  const newPathname = `${
+    window.location.pathname
+  }?${newSearchParams.toString()}`;
+
+  return newPathname;
+};
+
+NPM Package
+
+Yeah yeah, we have a library for that as well. And the one that I like and personally recommend is query-string.
+query-string
+faviconhttps://www.npmjs.com/package/query-string
+thumbnail
+
+But why bother using it?
+
+The above solutions will work perfectly fine if it’s a small application where you don’t have too many things to handle in the URL.
+
+However, as the application becomes complex, it gets a bit difficult to manage all parameters in the URL.
+
+For example, if your application might have search, filter, and pagination all in one place. And if the user wants to search for something with a filter and pagination enabled, you have to form a query in that way, i.e., /?q=macbook&color=silver&page=2
+
+We have to make sure that typing something in the search box doesn’t reset the parameters already present in the URL. Same with filters or pagination. Users should be able to add more parameters with ease.
+
+This is called preserving URL history/state so we don’t lose the previous information and provide the best UX
+
+To effectively manage this, I recommend using query-string. This is how you can create URLs while preserving their previous version,
+
+export function formUrlQuery({ params, key, value }: UrlQueryParams) {
+  const currentUrl = qs.parse(params);
+
+  currentUrl[key] = value;
+
+  return qs.stringifyUrl(
+    {
+      url: window.location.pathname,
+      query: currentUrl,
+    },
+    { skipNull: true },
+  );
+}
+
+You can call wherever you want, like this,
+
+/
+const handleUpdateParams = (value: string) => {
+  const newUrl = formUrlQuery({
+    params: searchParams.toString(),
+    key: "location",
+    value,
+  });
+
+  router.push(newUrl);
+};
+
+Sure, there might be more options for achieving the same thing. So as I said, choose the ones that work best for you & your problem case.
+
+But that’s how we do URL as state management in Next.js or even React.js. I hope you 
