@@ -85,10 +85,15 @@ interface SearchParams {
 }
 
 const Home = async ({ searchParams }: SearchParams) => {
-  const { query = "" } = await searchParams; // default to empty string if query is undefined
+  const { query = "",filter="" } = await searchParams; // default to empty string if query is undefined
 
-  const filteredQuestions = questions.filter((question) =>
-    question.title.toLowerCase().includes((query || "").toLowerCase())
+  const filteredQuestions = questions.filter((question) =>{
+    const matchesQuery = question.title.toLowerCase().includes(query.toLowerCase()) 
+
+    const matchesFilter = filter? question.tags[0].name.toLowerCase() === filter.toLowerCase():true;
+
+    return matchesQuery && matchesFilter;
+  }
   );
 
   return (
