@@ -18,6 +18,7 @@ import { Button } from "../ui/button";
 import Editor from "../editor";
 import { useRef } from "react";
 import { MDXEditorMethods } from "@mdxeditor/editor";
+import z from "zod";
 
 const QuestionForm = () => {
   const form = useForm({
@@ -29,7 +30,7 @@ const QuestionForm = () => {
     },
   });
   const editorRef = useRef<MDXEditorMethods>(null);
- const handleInputKeyDown = (
+  const handleInputKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     field: { value: string[] }
   ) => {
@@ -55,7 +56,7 @@ const QuestionForm = () => {
       }
     }
   };
-    const handleTagRemove = (tag: string, field: { value: string[] }) => {
+  const handleTagRemove = (tag: string, field: { value: string[] }) => {
     const newTags = field.value.filter((t) => t !== tag);
 
     form.setValue("tags", newTags);
@@ -67,8 +68,9 @@ const QuestionForm = () => {
       });
     }
   };
-  const handleCreateQuestion = () => {};
-
+  const handleCreateQuestion = (data: z.infer<typeof AskQuestionSchema>) => {
+    console.log("Question Data:", data);
+  };
 
   return (
     <Form {...form}>
@@ -98,7 +100,7 @@ const QuestionForm = () => {
             </FormItem>
           )}
         />
-           <FormField
+        <FormField
           control={form.control}
           name="content"
           render={({ field }) => (
@@ -122,7 +124,7 @@ const QuestionForm = () => {
             </FormItem>
           )}
         />
-         <FormField
+        <FormField
           control={form.control}
           name="tags"
           render={({ field }) => (
@@ -162,7 +164,7 @@ const QuestionForm = () => {
             </FormItem>
           )}
         />
-         <div className="mt-16 flex justify-end">
+        <div className="mt-16 flex justify-end">
           <Button
             type="submit"
             // disabled={isPending}
