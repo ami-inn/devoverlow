@@ -8,13 +8,13 @@
 }
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-
   --font-inter: "Inter Variable", sans-serif;
   --font-space-grotesk: "Space Grotesk Variable", sans-serif;
 
@@ -265,7 +265,7 @@
 }
 
 @utility invert-colors {
-  @apply invert dark:invert-0; 
+  @apply invert dark:invert-0;
 }
 
 @utility shadow-light100_dark100 {
@@ -317,10 +317,10 @@
 }
 
 @utility bg-auth-light {
-  @apply bg-[var(--background-image-auth-light)] ;
+  @apply bg-[var(--background-image-auth-light)];
 }
 @utility bg-auth-dark {
-  @apply bg-[var(--background-image-auth-dark)] ;
+  @apply bg-[var(--background-image-auth-dark)];
 }
 
 @utility flex-start {
