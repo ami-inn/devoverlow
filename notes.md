@@ -1086,3 +1086,7 @@ const handleUpdateParams = (value: string) => {
 Sure, there might be more options for achieving the same thing. So as I said, choose the ones that work best for you & your problem case.
 
 But that’s how we do URL as state management in Next.js or even React.js. I hope you 
+
+
+for url statemanagemnt in app uising the npm query-string
+npm i query-string
