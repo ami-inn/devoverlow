@@ -1120,13 +1120,13 @@ go to mongodb website check atlas create a free account
 https://www.mongodb.com/products/platform
 
 
-atlas pass xULBTUVCC3CWqKpH usernam amithedev_db_user
+atlas pass  usernam amithedev_db_user
 
 create a project and a cluster
 cluster means a group of servers that store your data and handle database operations
 choose free tier shared cluster
 
-new atlas pass TrGxBjK7isfm2y7w
+new atlas pass T
 username amithedev_db_user
 throw vscode extension mongodb for vscode connect your cluster to vscode using connection string
 mongodb+srv://amithedev_db_user:<password>@devflow.ucb5oul.mongodb.net/?retryWrites=true&w=majority
@@ -1134,3 +1134,7 @@ mongodb+srv://amithedev_db_user:<password>@devflow.ucb5oul.mongodb.net/?retryWri
 mongodb is a no sql database
 mongoose is an object data modeling (ODM) library for mongodb and node.js
 atlas is a cloud database service provided by mongodb
+
+ref to the database architecture
+https://www.mermaidchart.com/raw/c536cd1d-4449-4b13-ab26-6eff83763267?theme=light&version=v0.1&format=svg
+
