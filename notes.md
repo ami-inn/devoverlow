@@ -1138,3 +1138,31 @@ atlas is a cloud database service provided by mongodb
 ref to the database architecture
 https://www.mermaidchart.com/raw/c536cd1d-4449-4b13-ab26-6eff83763267?theme=light&version=v0.1&format=svg
 
+logger
+1 console.log 
+  easy to use for quick debugging
+  built in
+  not suitable for production use due to lack of features like log levels, formatting, and persistence
+
+2 winston
+  versatile and widely used logging library for node.js
+  supports multiple transports (console, file, remote servers)
+  allows log levels, formatting, and metadata
+  suitable for production applications
+  https://www.npmjs.com/package/winston
+
+3 pino
+  high performance logging library for node.js
+  designed for speed and low overhead
+  supports log levels, formatting, and multiple transports
+  suitable for high throughput applications
+  https://www.npmjs.com/package/pino
+
+4 bunyan
+  simple and fast logging library for node.js
+  produces structured JSON logs
+  supports log levels and multiple streams
+  suitable for production applications
+  https://www.npmjs.com/package/bunyan
+
+  using pino because its fast structured and super efficient
