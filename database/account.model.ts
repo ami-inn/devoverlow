@@ -3,10 +3,10 @@
 // account onver version of the spectific user
 // single user multiple accounts
 
-import { model, models, Schema } from "mongoose";
+import { model, models, Schema, Types } from "mongoose";
 
 export interface IAccount {
-  userId: string;
+  userId: Types.ObjectId;
   name: string;
   Image?: string;
   password?: string;
@@ -14,7 +14,7 @@ export interface IAccount {
   providerAccountId: string;
 }
 
-const accountSchema = new Schema({
+const accountSchema = new Schema<IAccount>({
     userId : { type: Schema.Types.ObjectId, ref: "User", required: true },
     name: { type: String, required: true },
     Image: { type: String },
