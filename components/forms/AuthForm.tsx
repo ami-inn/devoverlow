@@ -35,7 +35,9 @@ const AuthForm = <T extends FieldValues>({
   schema,
   defaultValues,
   onSubmit,
-}: AuthFormProps<T>) => {
+}: 
+
+AuthFormProps<T>) => {
   const form = useForm<T>({
     // @ts-expect-error - Generic ZodType causes resolver type mismatch
     resolver: zodResolver(schema),
@@ -57,6 +59,8 @@ const AuthForm = <T extends FieldValues>({
   };
 
    const buttonText = formType === "sign-in" ? "Sign In" : "Sign Up";
+   
+  
 
   return (
     <Form {...form}>

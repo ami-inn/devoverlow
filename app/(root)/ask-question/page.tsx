@@ -1,5 +1,5 @@
 import QuestionForm from '@/components/forms/QuestionForm'
-import React from 'react'
+
 
 const AskQuestion = () => {
   return (
@@ -9,7 +9,8 @@ const AskQuestion = () => {
         </h1>
 
         <div className='mt-9'>
-            <QuestionForm/>
+            
+            <QuestionForm />
 
         </div>
     </>

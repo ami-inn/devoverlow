@@ -1090,3 +1090,47 @@ But that’s how we do URL as state management in Next.js or even React.js. I ho
 
 for url statemanagemnt in app uising the npm query-string
 npm i query-string
+
+its used
+
+
+
+backend
+
+database
+different betweeen sql and no sql
+
+postgres 
+complex relationships
+relational model - structured data
+esasy to query for related data
+data integrity and support for complex multi step transactions
+optimized for complex queries and reporting
+
+mongodb
+suited for app requiring flexibility in data structure
+document base schemaless model stores data in json like bson format
+limited support for joins making compelx relationships harder to maange
+suitable for large datasets and distributed  environments
+optimized for high throughput and low latency operations
+supports a rich query language for filtering and aggregating data
+
+to start with mongodb
+go to mongodb website check atlas create a free account
+https://www.mongodb.com/products/platform
+
+
+atlas pass xULBTUVCC3CWqKpH usernam amithedev_db_user
+
+create a project and a cluster
+cluster means a group of servers that store your data and handle database operations
+choose free tier shared cluster
+
+new atlas pass TrGxBjK7isfm2y7w
+username amithedev_db_user
+throw vscode extension mongodb for vscode connect your cluster to vscode using connection string
+mongodb+srv://amithedev_db_user:<password>@devflow.ucb5oul.mongodb.net/?retryWrites=true&w=majority
+
+mongodb is a no sql database
+mongoose is an object data modeling (ODM) library for mongodb and node.js
+atlas is a cloud database service provided by mongodb
