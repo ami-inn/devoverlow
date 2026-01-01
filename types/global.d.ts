@@ -1,6 +1,9 @@
+
+
 type ActionResponse<T = null> = {
+  // t indicates whether the action was successful or not
   success: boolean;
-  data?: T;
+  data?: T; // data is present only if success is true
   error?: {
     message: string;
     details?: Record<string, string[]>;
@@ -12,7 +15,7 @@ type SuccessResponse<T = null> = ActionResponse<T> & { success: true };
 type ErrorResponse = ActionResponse<undefined> & { success: false };
 
 type APIErrorResponse = NextResponse<ErrorResponse>;
-type APIResponse<T = null> = NextResponse<SuccessResponse<T> | ErrorResponse>;
+type APIResponse<T = null> = NextResponse<SuccessResponse<T> | ErrorResponse>; // union type between success and error because API can return either
 
 interface UrlQueryParams {
   params: string;

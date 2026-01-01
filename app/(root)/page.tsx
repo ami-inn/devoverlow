@@ -21,70 +21,7 @@ const questions = [
     views: 100,
     createdAt: new Date(),
   },
-  {
-    _id: "2",
-    title: "What is the difference between let and var in JavaScript?",
-    content:
-      "Can someone explain the difference between let and var in JavaScript? When should I use one over the other?",
-    tags: [
-      { _id: "3", name: "javascript" },
-      { _id: "4", name: "programming" },
-    ],
-    author: { _id: "2", name: "Jane Smith", image: "", username: "" },
-    upvotes: 5,
-    downvotes: 0,
-    answers: 10,
-    views: 50,
-    createdAt: new Date(),
-  },
-  {
-    _id: "3",
-    title: "How to use async/await in JavaScript?",
-    content:
-      "I'm confused about how async/await works. Can someone provide a simple example?",
-    tags: [
-      { _id: "5", name: "javascript" },
-      { _id: "6", name: "async" },
-    ],
-    author: { _id: "3", name: "Bob Johnson", image: "", username: "" },
-    upvotes: 15,
-    downvotes: 0,
-    answers: 8,
-    views: 120,
-    createdAt: new Date(),
-  },
-  {
-    _id: "4",
-    title: "What are React hooks?",
-    content:
-      "I've heard about React hooks but don't understand what they are. Can someone explain?",
-    tags: [
-      { _id: "7", name: "react" },
-      { _id: "8", name: "hooks" },
-    ],
-    author: { _id: "4", name: "Alice Brown", image: "", username: "" },
-    upvotes: 25,
-    downvotes: 0,
-    answers: 15,
-    views: 200,
-    createdAt: new Date(),
-  },
-  {
-    _id: "5",
-    title: "How to deploy a Next.js app?",
-    content:
-      "What is the best way to deploy a Next.js application to production?",
-    tags: [
-      { _id: "9", name: "nextjs" },
-      { _id: "10", name: "deployment" },
-    ],
-    author: { _id: "5", name: "Charlie Wilson", image: "https://t4.ftcdn.net/jpg/11/66/06/77/360_F_1166067709_2SooAuPWXp20XkGev7oOT7nuK1VThCsN.jpg", username: "" },
-    upvotes: 30,
-    downvotes: 0,
-    answers: 12,
-    views: 180,
-    createdAt: new Date(),
-  },
+ 
 ];
 interface SearchParams {
   searchParams: Promise<{ [key: string]: string }>;

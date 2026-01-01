@@ -55,3 +55,8 @@ export async function DELETE(
     });
   }
 }
+
+
+// params and searchParams difference
+// params are part of the URL defined by the route structure
+// searchParams are query parameters appended to the URL after a '?' character
