@@ -59,3 +59,11 @@ export async function fetchHandler<T>(
     return handleError(error) as ActionResponse<T>; // return a structured error response
   }
 }
+
+
+
+// This code defines a generic fetch handler function that performs HTTP requests with built-in timeout handling and error management.
+// It uses the Fetch API to make requests and allows customization of request options, including headers and timeout duration.
+// If the request exceeds the specified timeout, it is aborted using the AbortController.
+// The function checks the response status and throws a custom RequestError for non-OK responses.
+// Any errors encountered during the fetch process are logged and processed through a centralized error handler, returning a structured error response.
