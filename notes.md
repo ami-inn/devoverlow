@@ -1166,3 +1166,11 @@ logger
   https://www.npmjs.com/package/bunyan
 
   using pino because its fast structured and super efficient
+
+
+  auth flow
+  -if a user usest github oauth well create an account containing gitubu oauth info and then create a user with a gihub name username and image
+  if a user uses google oauth well create an account containing google oauth info and then create a user with a google name username and image
+  -if a user user github oauth first or google oauth first and then other other later well create that oauth account and update userinfo to show the latest oauth name and image the usrname will stay as is once it has been created it wont fluctuate
+
+  using slugify for ensure the username follow specific format

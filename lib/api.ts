@@ -53,6 +53,7 @@ export const api = {
         method: "POST",
         body: JSON.stringify(accountData),
       }),
+    //   partial iaccount meaning some fields may be omitted
     update: (id: string, accountData: Partial<IAccount>) =>
       fetchHandler(`${API_BASE_URL}/accounts/${id}`, {
         method: "PUT",
@@ -60,6 +61,5 @@ export const api = {
       }),
     delete: (id: string) =>
       fetchHandler(`${API_BASE_URL}/accounts/${id}`, { method: "DELETE" }),
-  }
-
+  },
 };

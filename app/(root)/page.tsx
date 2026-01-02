@@ -14,14 +14,19 @@ const questions = [
       { _id: "1", name: "css" },
       { _id: "2", name: "html" },
     ],
-    author: { _id: "1", name: "John Doe", image: "https://t4.ftcdn.net/jpg/11/66/06/77/360_F_1166067709_2SooAuPWXp20XkGev7oOT7nuK1VThCsN.jpg", username: "" },
+    author: {
+      _id: "1",
+      name: "John Doe",
+      image:
+        "https://t4.ftcdn.net/jpg/11/66/06/77/360_F_1166067709_2SooAuPWXp20XkGev7oOT7nuK1VThCsN.jpg",
+      username: "",
+    },
     upvotes: 10,
     downvotes: 0,
     answers: 20,
     views: 100,
     createdAt: new Date(),
   },
- 
 ];
 interface SearchParams {
   searchParams: Promise<{ [key: string]: string }>;
