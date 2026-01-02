@@ -25,7 +25,7 @@ export const api = {
     getByEmail: (email: string) =>
       fetchHandler(`${API_BASE_URL}/users/email`, {
         method: "POST",
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email }), // sending email in the body
       }),
     create: (userData: Partial<IUser>) =>
       fetchHandler(`${API_BASE_URL}/users`, {
@@ -60,16 +60,6 @@ export const api = {
       }),
     delete: (id: string) =>
       fetchHandler(`${API_BASE_URL}/accounts/${id}`, { method: "DELETE" }),
-  },
-  ai: {
-    getAnswer: (
-      question: string,
-      content: string,
-      userAnswer?: string
-    ): APIResponse<string> =>
-      fetchHandler(`${API_BASE_URL}/ai/answers`, {
-        method: "POST",
-        body: JSON.stringify({ question, content, userAnswer }),
-      }),
-  },
+  }
+
 };
