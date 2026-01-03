@@ -1,35 +1,32 @@
-import { model, models, Schema } from "mongoose";
+import { model, models, Schema, Document } from "mongoose";
 
-// frontend know about the user interface
 export interface IUser {
+  id ?: string;
   name: string;
   username: string;
   email: string;
-  // password: string;
   bio?: string;
   image?: string;
   location?: string;
   portfolio?: string;
   reputation?: number;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
-const userSchema = new Schema(
+export interface IUserDoc extends IUser, Document {}
+const UserSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
-    // password: { type: String, required: true },
-    bio: { type: String, default: "" },
-    image: { type: String, default: "" },
-    location: { type: String, default: "" },
-    portfolio: { type: String, default: "" },
+    bio: { type: String },
+    image: { type: String },
+    location: { type: String },
+    portfolio: { type: String },
     reputation: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
 
-const User = models.User || model<IUser>("User", userSchema);
+const User = models?.User || model<IUser>("User", UserSchema);
 
 export default User;

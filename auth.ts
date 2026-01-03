@@ -3,12 +3,57 @@ import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import { api } from "./lib/api";
 import { IAccount } from "./database/account.model";
-
+import Credentials from "next-auth/providers/credentials";
+import { SignInSchema } from "./lib/validations";
+import { IUser } from "./database/user.model";
+import bcrypt from "bcrypt";
 // well check if the signin account type is credentials if yes then we skip weill handle it the other way arond when doing email pasword based auth
 // but if the account type is not credentials well call this new signin-with-oauth endpoint to create or update user and account info
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [GitHub, Google],
+  providers: [GitHub, Google,
+
+    // ver
+    Credentials({
+      async authorize(credentials) {
+
+        const validatedFields = SignInSchema.safeParse(credentials);
+
+        if (validatedFields.success) {
+          const { email, password } = validatedFields.data;
+
+          const { data: existingAccount } = (await api.accounts.getByProvider(
+            email
+          )) as ActionResponse<IAccount>;
+
+          if (!existingAccount) return null;
+
+          const { data: existingUser } = (await api.users.getById(
+            existingAccount.userId.toString()
+          )) as ActionResponse<IUser>;
+
+          if (!existingUser) return null;
+
+          const isValidPassword = await bcrypt.compare(
+            password,
+            existingAccount.password!
+          );
+          console.log(existingUser,'existing user in authorize');
+
+          if (isValidPassword) {
+            return {
+              id:existingUser.id,
+              name: existingUser.name,
+              email: existingUser.email,
+              image: existingUser.image,
+            };
+          }
+        }
+        return null;
+      },
+    }),
+  ],
+  
   callbacks: {
     //  session callback is called whenever a session is checked or created
     // we use it to attach the user id to the session object
