@@ -1,8 +1,8 @@
-'use server'
+"use server";
 
-import { ZodSchema,ZodError } from "zod";
+import { ZodSchema, ZodError } from "zod";
 import { Session } from "next-auth";
-import { UnauthorizedError,ValidationError } from "../http-errors";
+import { UnauthorizedError, ValidationError } from "../http-errors";
 import dbConnect from "../mongoose";
 import { auth } from "@/auth";
 // t means generic type that will be used to type the params and schema
@@ -17,7 +17,6 @@ type ActionOptions<T> = {
 // 3. Connecting to the database.
 // 4. Returning the params and session.
 
-
 async function action<T>({
   params,
   schema,
@@ -25,7 +24,7 @@ async function action<T>({
 }: ActionOptions<T>) {
   if (schema && params) {
     try {
-        //  validate params against the schema
+      //  validate params against the schema
       schema.parse(params);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -38,14 +37,14 @@ async function action<T>({
     }
   }
 
-//   generate new session if authorize is true
+  //   generate new session if authorize is true
   let session: Session | null = null;
 
   if (authorize) {
     session = await auth(); // get the current session to check if user is logged in
 
     if (!session) {
-      return new UnauthorizedError(); 
+      return new UnauthorizedError();
     }
   }
 
