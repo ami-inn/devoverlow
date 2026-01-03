@@ -40,9 +40,18 @@ export async function signUpWithCredentials(
       throw new Error("Username already exists");
     }
     const hashedPassword = await bcrypt.hash(password, 12);
+
+    // why the array syntax - to ensure the operation is part of the transaction
+    // if we dont use array syntax and create multiple users at the same time with same email or username
+    // there could be race condition leading to duplicate entries
+    // using array syntax with session ensures uniqueness constraints are respected
+    // it will return an array of created users
+    // it s look  like this because mongoose create method can create multiple documents at once
+    // ex - User.create([{},{},{}]) you get back an array of created users like [user1,user2,user3]
     const [newUser] = await User.create([{ username, name, email }], {
       session,
     });
+    // it will ret
 
     await Account.create(
       [
@@ -56,7 +65,10 @@ export async function signUpWithCredentials(
       ],
       { session }
     );
-    await session.commitTransaction(); // commit the transaction if all operations are successful
+    await session.commitTransaction();
+
+    await signIn("credentials", { email, password, redirect: false });
+
     return { success: true };
   } catch (error) {
     await session.abortTransaction();

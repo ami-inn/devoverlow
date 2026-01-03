@@ -22,12 +22,13 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import Link from "next/link";
 import ROUTES from "@/constants/routes";
+import { useRouter } from "next/navigation";
 
 interface AuthFormProps<T extends FieldValues> {
   formType: "sign-in" | "signup";
   schema: z.ZodType<T>;
   defaultValues: DefaultValues<T>;
-  onSubmit: SubmitHandler<T>;
+  onSubmit: (data: T) => Promise<ActionResponse>;
 }
 
 const AuthForm = <T extends FieldValues>({
@@ -44,13 +45,25 @@ AuthFormProps<T>) => {
     defaultValues,
   });
 
+  const router = useRouter();
+
   const handleFormSubmit: SubmitHandler<T> = async (data) => {
     try {
         // authenticate user
-      await onSubmit(data);
-      toast.success(
-        formType === "signup" ? "Signup Successful" : "Sign-In Successful"
-      );
+     const result = (await onSubmit(data)) as ActionResponse;
+
+      if (result.success) {
+        toast.success(
+          formType === "sign-in"
+            ? "Signed in successfully!"
+            : "Account created successfully! Please sign in."
+        );
+              router.push(ROUTES.HOME);
+      } else {
+        toast.error("Authentication Error", {
+          description: result?.error?.message || "Something went wrong. Please try again.",
+        });
+      }
     } catch (error) {
       toast.error("Authentication Error", {
         description: "Failed to authenticate. Please try again.",
