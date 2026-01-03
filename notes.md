@@ -1174,3 +1174,26 @@ logger
   -if a user user github oauth first or google oauth first and then other other later well create that oauth account and update userinfo to show the latest oauth name and image the usrname will stay as is once it has been created it wont fluctuate
 
   using slugify for ensure the username follow specific format
+
+  npm i server-only
+  this package ensures that certain modules are only imported and executed on the server side in a Next.js application. It helps prevent accidental inclusion of server-only code in client-side bundles, which can lead to runtime errors and increased bundle size.
+  import serverOnly from 'server-only';
+  serverOnly(); // Ensures the following code runs only on the server side
+
+  if we use useserver then where it called is not a matter u can directly update the database from there
+  dont use server actions for data fetching use react server components or api routes instead
+
+  server actions are m ainly for now used to perform mutations from client side as they make pa post request
+  if you want to call server actin from the client side youll have to create a sperate file with 'use server' written at the top
+
+  //lib/action.ts
+  'use server';
+
+  export async function mutate(){}
+
+  to call server action from the server side you can just write 'use server' at the top of the function body
+
+  asyn function handleSubmit(){
+    'use server'
+    //code
+  }
