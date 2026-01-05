@@ -1,24 +1,24 @@
-
-
-import NavLinks from './navbar/Navlinks'
-import Link from 'next/link';
-import ROUTES from '@/constants/routes';
-import Image from 'next/image';
-import { Button } from '../ui/button';
-import { LogOut } from 'lucide-react';
-import { auth, signOut } from '@/auth';
+import NavLinks from "./navbar/Navlinks";
+import Link from "next/link";
+import ROUTES from "@/constants/routes";
+import Image from "next/image";
+import { Button } from "../ui/button";
+import { LogOut } from "lucide-react";
+import { auth, signOut } from "@/auth";
 
 const LeftSidebar = async () => {
-    const session = await auth();
+  const session = await auth();
 
-  const userId = session?.user
+  const userId = session?.user?.id;
 
-   return (
-     <section className="custom-scrollbar background-light900_dark200 light-border sticky left-0 top-0 flex h-screen flex-col justify-between overflow-y-auto border-r p-6 pt-36 shadow-light-300 dark:shadow-none max-sm:hidden lg:w-[266px]">
+  return (
+    <section className="custom-scrollbar background-light900_dark200 light-border sticky left-0 top-0 flex h-screen flex-col justify-between overflow-y-auto border-r p-6 pt-36 shadow-light-300 dark:shadow-none max-sm:hidden lg:w-[266px]">
       <div className="flex flex-1 flex-col gap-6">
-        <NavLinks />
+        <NavLinks
+        userId={userId }
+        />
       </div>
-        <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {userId ? (
           <form
             action={async () => {
@@ -29,7 +29,7 @@ const LeftSidebar = async () => {
           >
             <Button
               type="submit"
-              className="base-medium w-fit !bg-transparent px-4 py-3"
+              className="base-medium w-fit cursor-pointer !bg-transparent px-4 py-3"
             >
               <LogOut className="size-5 text-black dark:text-white" />
               <span className="text-dark300_light900 max-lg:hidden">
@@ -76,7 +76,7 @@ const LeftSidebar = async () => {
         )}
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default LeftSidebar
+export default LeftSidebar;

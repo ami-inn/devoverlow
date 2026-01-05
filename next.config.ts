@@ -12,6 +12,16 @@ const nextConfig: NextConfig = {
         hostname: "t4.ftcdn.net",
         port: "",
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        port: "",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+        port: "",
+      }
     ],
   },
 };
