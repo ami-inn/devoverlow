@@ -1197,3 +1197,7 @@ logger
     'use server'
     //code
   }
+
+  usetransition
+  instead of using useState for handling loading states for server actions its better to use useTransition as it allows us to mark a state update as non urgent letting react know that it can delay the update if needed to keep the app responsive
+  work will done in background

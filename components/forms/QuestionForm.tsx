@@ -3,6 +3,7 @@ import { AskQuestionSchema } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useForm } from "react-hook-form";
+import { ReloadIcon } from "@radix-ui/react-icons";
 import {
   Form,
   FormControl,
@@ -16,11 +17,16 @@ import { Input } from "../ui/input";
 import TagCard from "../cards/TagCard";
 import { Button } from "../ui/button";
 import Editor from "../editor";
-import { useRef } from "react";
+import { useRef, useTransition } from "react";
 import { MDXEditorMethods } from "@mdxeditor/editor";
 import z from "zod";
+import { createQuestion } from "@/lib/actions/question.action";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import ROUTES from "@/constants/routes";
 
 const QuestionForm = () => {
+  const router = useRouter();
   const form = useForm({
     resolver: zodResolver(AskQuestionSchema),
     defaultValues: {
@@ -29,6 +35,7 @@ const QuestionForm = () => {
       tags: [],
     },
   });
+  const [isPending, startTransition] = useTransition();
   const editorRef = useRef<MDXEditorMethods>(null);
   const handleInputKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
@@ -68,8 +75,19 @@ const QuestionForm = () => {
       });
     }
   };
-  const handleCreateQuestion = (data: z.infer<typeof AskQuestionSchema>) => {
+  const handleCreateQuestion = async (
+    data: z.infer<typeof AskQuestionSchema>
+  ) => {
+    startTransition(async () => {
     console.log("Question Data:", data);
+    const result = await createQuestion(data);
+    if (result.success) {
+      toast.success("Question created successfully!");
+      result.data ? router.push(ROUTES.QUESTION(result.data?._id)) : null;
+    } else {
+      toast.error("Failed to create question. Please try again.");
+    }
+    });
   };
 
   return (
@@ -167,18 +185,21 @@ const QuestionForm = () => {
         <div className="mt-16 flex justify-end">
           <Button
             type="submit"
-            // disabled={isPending}
+            disabled={isPending}
             className="primary-gradient w-fit !text-light-900"
           >
-            {/* {isPending ? (
+            {isPending ? (
               <>
                 <ReloadIcon className="mr-2 size-4 animate-spin" />
                 <span>Submitting</span>
               </>
             ) : (
-              <>{isEdit ? "Edit" : "Ask a Question"}</>
-            )} */}
+              // <>{isEdit ? "Edit" : "Ask a Question"}</>
+              <>
             ask a question
+              </>
+            )}
+            
           </Button>
         </div>
       </form>
