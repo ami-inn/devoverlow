@@ -3,11 +3,13 @@
 import Question, { IQuestionModel } from "@/database/question.model";
 import action from "../handlers/action";
 import handleError from "../handlers/error";
-import { AskQuestionSchema, EditQuestionSchema } from "../validations";
+import { AskQuestionSchema, EditQuestionSchema, GetQuestionSchema } from "../validations";
 import mongoose from "mongoose";
 import { after } from "next/server";
 import TagQuestion from "@/database/tag-question.model";
 import Tag, { ITag } from "@/database/tag.model";
+import { cache } from "react";
+// cache for get question it improves performance by storing results of previous fetches
 
 export async function createQuestion(
   params: CreateQuestionParams
@@ -210,3 +212,34 @@ export async function editQuestion(
     await session.endSession();
   }
 }
+
+
+// get question
+// using cache to improve performance 
+// it stores results of previous fetches
+export const getQuestion = cache(async function getQuestion(
+  params: GetQuestionParams
+): Promise<ActionResponse<Question>> {
+  const validationResult = await action({
+    params,
+    schema: GetQuestionSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { questionId } = validationResult.params!;
+
+  try {
+    const question = await Question.findById(questionId)
+      .populate("tags", "_id name")
+      .populate("author", "_id name image");
+
+    if (!question) throw new Error("Question not found");
+
+    return { success: true, data: JSON.parse(JSON.stringify(question)) };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+});
