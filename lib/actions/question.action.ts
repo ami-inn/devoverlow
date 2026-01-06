@@ -1,5 +1,6 @@
 "use server";
 
+import  "@/database/user.model";
 import Question, { IQuestionModel } from "@/database/question.model";
 import action from "../handlers/action";
 import handleError from "../handlers/error";
@@ -9,6 +10,7 @@ import { after } from "next/server";
 import TagQuestion from "@/database/tag-question.model";
 import Tag, { ITag } from "@/database/tag.model";
 import { cache } from "react";
+import dbConnect from "../mongoose";
 // cache for get question it improves performance by storing results of previous fetches
 
 export async function createQuestion(
@@ -101,6 +103,7 @@ export async function createQuestion(
 export async function editQuestion(
   params: EditQuestionParams
 ): Promise<ActionResponse<IQuestionModel>> {
+  await dbConnect();
   const validationResult = await action({
     params,
     schema: EditQuestionSchema,
@@ -220,6 +223,8 @@ export async function editQuestion(
 export const getQuestion = cache(async function getQuestion(
   params: GetQuestionParams
 ): Promise<ActionResponse<Question>> {
+  
+  await dbConnect();
   const validationResult = await action({
     params,
     schema: GetQuestionSchema,
@@ -243,3 +248,13 @@ export const getQuestion = cache(async function getQuestion(
     return handleError(error) as ErrorResponse;
   }
 });
+
+
+// server actions are designe dto be used in different contexts
+
+// 1. in server components : they act like regular async functions fetching data directly from the server
+
+// 2. in client components : when used in form actions or event handlers, they are invoked via a post request
+
+// its called direct innovation . when you use a server action in a server component youre directly caling the function on the server theres no http request
+// involved at all becasue both the server component and there server action are executing in the same server environment.

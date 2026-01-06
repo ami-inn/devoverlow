@@ -16,23 +16,33 @@ import {
 import { Input } from "../ui/input";
 import TagCard from "../cards/TagCard";
 import { Button } from "../ui/button";
-import Editor from "../editor";
+// import Editor from "../editor";
 import { useRef, useTransition } from "react";
 import { MDXEditorMethods } from "@mdxeditor/editor";
 import z from "zod";
-import { createQuestion } from "@/lib/actions/question.action";
+import { createQuestion, editQuestion } from "@/lib/actions/question.action";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import ROUTES from "@/constants/routes";
+import dynamic from "next/dynamic";
 
-const QuestionForm = () => {
+const Editor = dynamic(() => import("@/components/editor"), {
+  ssr: false,
+});
+
+interface Params {
+  question?: Question;
+  isEdit?: boolean;
+}
+
+const QuestionForm = ({ question, isEdit = false }: Params) => {
   const router = useRouter();
   const form = useForm({
     resolver: zodResolver(AskQuestionSchema),
     defaultValues: {
-      title: "",
-      content: "",
-      tags: [],
+      title: question?.title || "",
+      content: question?.content || "",
+      tags: question?.tags.map((tag) => tag.name) || [],
     },
   });
   const [isPending, startTransition] = useTransition();
@@ -79,14 +89,30 @@ const QuestionForm = () => {
     data: z.infer<typeof AskQuestionSchema>
   ) => {
     startTransition(async () => {
-    console.log("Question Data:", data);
-    const result = await createQuestion(data);
-    if (result.success) {
-      toast.success("Question created successfully!");
-      result.data ? router.push(ROUTES.QUESTION(result.data?._id)) : null;
-    } else {
-      toast.error("Failed to create question. Please try again.");
-    }
+      if (isEdit && question) {
+        const result = await editQuestion({
+          questionId: question?._id,
+          ...data,
+        });
+
+        if (result.success) {
+          toast.success("Question updated successfully!");
+
+          if (result.data?._id) router.push(ROUTES.QUESTION(result.data._id));
+        } else {
+          toast.error("Failed to update question. Please try again.");
+        }
+
+        return;
+      }
+      console.log("Question Data:", data);
+      const result = await createQuestion(data);
+      if (result.success) {
+        toast.success("Question created successfully!");
+        if (result.data?._id) router.push(ROUTES.QUESTION(result.data._id));
+      } else {
+        toast.error("Failed to create question. Please try again.");
+      }
     });
   };
 
@@ -194,12 +220,8 @@ const QuestionForm = () => {
                 <span>Submitting</span>
               </>
             ) : (
-              // <>{isEdit ? "Edit" : "Ask a Question"}</>
-              <>
-            ask a question
-              </>
+              <>{isEdit ? "Edit" : "Ask a Question"}</>
             )}
-            
           </Button>
         </div>
       </form>
