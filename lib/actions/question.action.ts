@@ -1,13 +1,13 @@
 "use server";
 
-import Question from "@/database/question.model";
+import Question, { IQuestionModel } from "@/database/question.model";
 import action from "../handlers/action";
 import handleError from "../handlers/error";
-import { AskQuestionSchema } from "../validations";
+import { AskQuestionSchema, EditQuestionSchema } from "../validations";
 import mongoose from "mongoose";
 import { after } from "next/server";
 import TagQuestion from "@/database/tag-question.model";
-import Tag from "@/database/tag.model";
+import Tag, { ITag } from "@/database/tag.model";
 
 export async function createQuestion(
   params: CreateQuestionParams
@@ -84,6 +84,122 @@ export async function createQuestion(
     //   });
     // });
 
+    await session.commitTransaction();
+
+    return { success: true, data: JSON.parse(JSON.stringify(question)) };
+  } catch (error) {
+    await session.abortTransaction();
+    return handleError(error) as ErrorResponse;
+  } finally {
+    await session.endSession();
+  }
+}
+
+// edit question
+export async function editQuestion(
+  params: EditQuestionParams
+): Promise<ActionResponse<IQuestionModel>> {
+  const validationResult = await action({
+    params,
+    schema: EditQuestionSchema,
+    authorize: true,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { title, content, tags, questionId } = validationResult.params!;
+  const userId = validationResult.session?.user?.id;
+
+  // sesssion for to handle multiple operations atomically
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Fetch the question to be edited
+    // populate tags to compare existing ones 
+    // with populate it fetches full tag documents instead of just ids
+    const question = await Question.findById(questionId).populate("tags");
+    if (!question) throw new Error("Question not found");
+
+    if (question.author.toString() !== userId) {
+      throw new Error("You are not authorized to edit this question");
+    }
+
+    // Update title and content if they have changed
+    if (question.title !== title || question.content !== content) {
+      question.title = title;
+      question.content = content;
+      await question.save({ session });
+    }
+
+    // Determine tags to add and remove
+    const tagsToAdd = tags.filter(
+      (tag) =>
+        // check if tag is not already associated with the question
+      // some method checks if any existing tag matches the new tag (case insensitive)
+        !question.tags.some(
+          (t: ITag) => t.name.toLowerCase() === tag.toLowerCase()
+        )
+    );
+
+    const tagsToRemove = question.tags.filter(
+      (tag: ITag) =>
+        !tags.some((t) => t.toLowerCase() === tag.name.toLowerCase())
+    );
+
+    // Add new tags
+    const newTagDocuments = [];
+    // Add tags the for loop to handle multiple tags
+    // upsert each tag and create TagQuestion relationship
+    if (tagsToAdd.length > 0) {
+      for (const tag of tagsToAdd) {
+        const newTag = await Tag.findOneAndUpdate(
+          { name: { $regex: `^${tag}$`, $options: "i" } },
+          { $setOnInsert: { name: tag }, $inc: { questions: 1 } },
+          { upsert: true, new: true, session }
+        );
+
+        if (newTag) {
+          newTagDocuments.push({ tag: newTag._id, question: questionId });
+          question.tags.push(newTag._id);
+        }
+      }
+    }
+
+    // Remove tags
+    if (tagsToRemove.length > 0) {
+      console.log(tagsToRemove,'tags to remove');
+      const tagIdsToRemove = tagsToRemove.map((tag: ITag) => tag._id);
+
+      await Tag.updateMany(
+        { _id: { $in: tagIdsToRemove } },
+        { $inc: { questions: -1 } },
+        { session }
+      );
+
+      await TagQuestion.deleteMany(
+        { tag: { $in: tagIdsToRemove }, question: questionId },
+        { session }
+      );
+
+      // Update question's tags array to remove the disassociated tags
+      question.tags = question.tags.filter(
+        (tag: mongoose.Types.ObjectId) =>
+          !tagIdsToRemove.some((id: mongoose.Types.ObjectId) =>
+            id.equals(tag._id)
+          )
+      );
+    }
+
+    // Insert new TagQuestion documents
+    if (newTagDocuments.length > 0) {
+      await TagQuestion.insertMany(newTagDocuments, { session });
+    }
+
+    // Save the updated question
+    await question.save({ session });
     await session.commitTransaction();
 
     return { success: true, data: JSON.parse(JSON.stringify(question)) };
