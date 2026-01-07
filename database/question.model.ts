@@ -10,6 +10,8 @@ export interface IQuestionModel {
     downVotes?: number;
     answers?: number;
     author: Schema.Types.ObjectId;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 const questionSchema = new Schema<IQuestionModel>({
@@ -21,7 +23,7 @@ const questionSchema = new Schema<IQuestionModel>({
   downVotes :{ type: Number, default: 0 },
   answers: { type: Number, default: 0 },
   author: { type: Schema.Types.ObjectId, ref: "User", required: true },
-});
+}, { timestamps: true });
 
 const Question = models?.Question || model<IQuestionModel>("Question", questionSchema);
 

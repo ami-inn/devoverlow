@@ -260,6 +260,7 @@ export const getQuestion = cache(async function getQuestion(
 // its called direct innovation . when you use a server action in a server component youre directly caling the function on the server theres no http request
 // involved at all becasue both the server component and there server action are executing in the same server environment.
 
+
 export async function getQuestions(params: PaginatedSearchParams): Promise<
   ActionResponse<{
     questions: Question[];
@@ -321,7 +322,7 @@ export async function getQuestions(params: PaginatedSearchParams): Promise<
     const totalQuestions = await Question.countDocuments(filterQuery);
   
     const questions = await Question.find(filterQuery)
-      .populate("tags", "name") // populate tags with only name field
+      .populate("tags", "name") // populate tags with only name field that means  it will return only name of tags
       .populate("author", "name image") // only fetch name and image of author
       .lean() // convert mongoose documents to plain js objects for better performance
       .sort(sortCriteria)
