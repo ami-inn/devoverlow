@@ -1201,3 +1201,9 @@ logger
   usetransition
   instead of using useState for handling loading states for server actions its better to use useTransition as it allows us to mark a state update as non urgent letting react know that it can delay the update if needed to keep the app responsive
   work will done in background
+
+
+   function writtend in server actions make post requests .if you are on client then only it will make a post request if you use this server action on the server side it will just run the code directly without making any post request.it will normal function call
+
+
+   we can write this as notmal functions or directly inside the component but that will kill the goal of "speration of concerns" and make our code much less readabl;e. so to keep things togethr wile following the seperation of concerns well create a new file where we will list all its associated server actions
