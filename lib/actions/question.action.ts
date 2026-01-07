@@ -4,13 +4,14 @@ import  "@/database/user.model";
 import Question, { IQuestionModel } from "@/database/question.model";
 import action from "../handlers/action";
 import handleError from "../handlers/error";
-import { AskQuestionSchema, EditQuestionSchema, GetQuestionSchema } from "../validations";
-import mongoose from "mongoose";
+import { AskQuestionSchema, EditQuestionSchema, GetQuestionSchema, PaginatedSearchParamsSchema } from "../validations";
+import mongoose,{QueryFilter,Types} from "mongoose";
 import { after } from "next/server";
 import TagQuestion from "@/database/tag-question.model";
 import Tag, { ITag } from "@/database/tag.model";
 import { cache } from "react";
 import dbConnect from "../mongoose";
+import { auth } from "@/auth";
 // cache for get question it improves performance by storing results of previous fetches
 
 export async function createQuestion(
@@ -258,3 +259,85 @@ export const getQuestion = cache(async function getQuestion(
 
 // its called direct innovation . when you use a server action in a server component youre directly caling the function on the server theres no http request
 // involved at all becasue both the server component and there server action are executing in the same server environment.
+
+export async function getQuestions(params: PaginatedSearchParams): Promise<
+  ActionResponse<{
+    questions: Question[];
+    isNext: boolean;
+  }>
+> {
+  const validationResult = await action({
+    params, // params to be validated
+    schema: PaginatedSearchParamsSchema,
+  });
+  
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+  
+  // destructure validated params
+  const { page = 1, pageSize = 10, query, filter } = params;
+  
+  // calculate skip and limit for pagination
+  // skip calculation = (page - 1) * pageSize means skip all items from previous pages
+  const skip = (Number(page) - 1) * pageSize;
+  const limit = pageSize;
+  
+  
+  //  filter query object to build dynamic queries
+  const filterQuery: QueryFilter<typeof Question> = {};
+  let sortCriteria = {};  //  for to hold sorting criteria
+  
+  try {
+    // Recommendations
+    await dbConnect();
+
+    // Search
+    if (query) {
+      // search in title and content using regex for partial matching and case insensitivity
+      filterQuery.$or = [
+        { title: { $regex: query, $options: "i" } },
+        { content: { $regex: query, $options: "i" } },
+      ];
+    }
+
+    // Filters
+    switch (filter) {
+      case "newest":
+        sortCriteria = { createdAt: -1 }; 
+        break;
+      case "unanswered":
+        filterQuery.answers = 0;
+        sortCriteria = { createdAt: -1 };
+        break;
+      case "popular":
+        sortCriteria = { upvotes: -1 }; // descending order
+        break;
+      default:
+        sortCriteria = { createdAt: -1 };
+        break;
+    }
+
+    const totalQuestions = await Question.countDocuments(filterQuery);
+  
+    const questions = await Question.find(filterQuery)
+      .populate("tags", "name") // populate tags with only name field
+      .populate("author", "name image") // only fetch name and image of author
+      .lean() // convert mongoose documents to plain js objects for better performance
+      .sort(sortCriteria)
+      .skip(skip)
+      .limit(limit);
+
+    const isNext = totalQuestions > skip + questions.length;
+
+    return {
+      success: true,
+      data: {
+        questions: JSON.parse(JSON.stringify(questions)),
+        isNext,
+      },
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
