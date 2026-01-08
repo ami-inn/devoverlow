@@ -1,4 +1,5 @@
 import TagCard from "@/components/cards/TagCard";
+import { Preview } from "@/components/editor/Preview";
 import Metric from "@/components/Metric";
 import UserAvatar from "@/components/UserAvatar";
 import ROUTES from "@/constants/routes";
@@ -116,7 +117,7 @@ const Question = async ({ params }: RouteParams) => {
         />
       </div>
 
-      {/* <Preview content={content} /> */}
+      <Preview content={sampleQuestion.content} />
 
       <div className="mt-8 flex flex-wrap gap-2">
         {sampleQuestion.tags.map((tag: Tag) => (

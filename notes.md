@@ -1207,3 +1207,8 @@ logger
 
 
    we can write this as notmal functions or directly inside the component but that will kill the goal of "speration of concerns" and make our code much less readabl;e. so to keep things togethr wile following the seperation of concerns well create a new file where we will list all its associated server actions
+
+   next-mdx-remote 
+   for rendering mdx content from external sources like database or file system in next.js applications
+   npm i next-mdx-remote
+   npm i bright - for syntax highlighting
