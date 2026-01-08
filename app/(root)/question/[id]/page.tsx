@@ -3,51 +3,83 @@ import { Preview } from "@/components/editor/Preview";
 import Metric from "@/components/Metric";
 import UserAvatar from "@/components/UserAvatar";
 import ROUTES from "@/constants/routes";
+import { getQuestion } from "@/lib/actions/question.action";
 import { formatNumber, getTimeStamp } from "@/lib/utils";
+import { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-const sampleQuestion = {
-  _id: "question_id_123",
-  title: "How to implement authentication in Next.js?",
-  content: `
-  ### Question
+// const sampleQuestion = {
+//   _id: "question_id_123",
+//   title: "How to implement authentication in Next.js?",
+//   content: `
+//   ### Question
   
-  I'm building a web application using Next.js and I need to implement user authentication. What are the best practices for handling authentication in a Next.js app? Should I use JWTs, sessions, or some other method? Also, how can I securely store user credentials and manage user sessions?
+//   I'm building a web application using Next.js and I need to implement user authentication. What are the best practices for handling authentication in a Next.js app? Should I use JWTs, sessions, or some other method? Also, how can I securely store user credentials and manage user sessions?
   
-  ### Details
+//   ### Details
   
-  - I want to allow users to sign up, log in, and log out.
-  - The app should have protected routes that only authenticated users can access.
-  - I'm considering using third-party services like Auth0 or Firebase Authentication, but I'm open to other suggestions.
+//   - I want to allow users to sign up, log in, and log out.
+//   - The app should have protected routes that only authenticated users can access.
+//   - I'm considering using third-party services like Auth0 or Firebase Authentication, but I'm open to other suggestions.
   
-  ### What I've Tried
+//   ### What I've Tried
   
-  So far, I've looked into using JWTs stored in HTTP-only cookies for authentication. However, I'm unsure about the security implications and how to handle token refreshes. Any guidance or code examples would be greatly appreciated!
+//   So far, I've looked into using JWTs stored in HTTP-only cookies for authentication. However, I'm unsure about the security implications and how to handle token refreshes. Any guidance or code examples would be greatly appreciated!
   
-  ### Additional Context
+//   ### Additional Context
   
-  The application is built with Next.js 13 using the App Router. I'm also using MongoDB as my database
-  for storing user data.
-  `,
-  createdAt: "2024-01-15T10:00:00Z",
-  upvotes: 25,
-  downvotes: 3,
-  views: 150,
-  answers: 5,
-  tags: [
-    { _id: "tag1", name: "Next.js" },
-    { _id: "tag2", name: "Authentication" },
-    { _id: "tag3", name: "Web Development" },
-  ],
-  author: {
-    _id: "author_id_456",
-    name: "Jane Doe",
-    image: "",
-  },
-};
+//   The application is built with Next.js 13 using the App Router. I'm also using MongoDB as my database
+//   for storing user data.
+//   `,
+//   createdAt: "2024-01-15T10:00:00Z",
+//   upvotes: 25,
+//   downvotes: 3,
+//   views: 150,
+//   answers: 5,
+//   tags: [
+//     { _id: "tag1", name: "Next.js" },
+//     { _id: "tag2", name: "Authentication" },
+//     { _id: "tag3", name: "Web Development" },
+//   ],
+//   author: {
+//     _id: "author_id_456",
+//     name: "Jane Doe",
+//     image: "",
+//   },
+// };
 
-const Question = async ({ params }: RouteParams) => {
+export async function generateMetadata({
+  params,
+}: RouteParams): Promise<Metadata> {
   const { id } = await params;
+
+  const { success, data: question } = await getQuestion({ questionId: id });
+
+  if (!success || !question) {
+    return {
+      title: "Question not found",
+      description: "This question does not exist.",
+    };
+  }
+
+  return {
+    title: question.title,
+    description: question.content.slice(0, 100),
+    twitter: {
+      card: "summary_large_image",
+      title: question.title,
+      description: question.content.slice(0, 100),
+    },
+  };
+}
+
+const Question = async ({ params, searchParams }: RouteParams) => {
+  const { id } = await params;
+  const { page, pageSize, filter } = await searchParams;
+  const { success, data: question } = await getQuestion({ questionId: id });
+
+  if (!success || !question) return redirect("/404");
 
   return (
     <>
@@ -55,15 +87,15 @@ const Question = async ({ params }: RouteParams) => {
         <div className="flex w-full flex-col-reverse justify-between">
           <div className="flex items-center justify-start gap-1">
             <UserAvatar
-              id={sampleQuestion.author._id}
-              name={sampleQuestion.author.name}
-              imageUrl={sampleQuestion.author.image}
+              id={question.author._id}
+              name={question.author.name}
+              imageUrl={question.author.image}
               className="size-[22px]"
               fallbackClassName="text-[10px]"
             />
-            <Link href={ROUTES.PROFILE(sampleQuestion.author._id)}>
+            <Link href={ROUTES.PROFILE(question.author._id)}>
               <p className="paragraph-semibold text-dark300_light700">
-                {sampleQuestion.author.name}
+                {question.author.name}
               </p>
             </Link>
           </div>
@@ -89,7 +121,7 @@ const Question = async ({ params }: RouteParams) => {
         </div>
 
         <h2 className="h2-semibold text-dark200_light900 mt-3.5 w-full">
-          {sampleQuestion.title}
+          {question.title}
         </h2>
       </div>
 
@@ -97,30 +129,30 @@ const Question = async ({ params }: RouteParams) => {
         <Metric
           imgUrl="/icons/clock.svg"
           alt="clock icon"
-          value={` asked ${getTimeStamp(new Date(sampleQuestion.createdAt))}`}
+          value={` asked ${getTimeStamp(new Date(question.createdAt))}`}
           title=""
           textStyles="small-regular text-dark400_light700"
         />
         <Metric
           imgUrl="/icons/message.svg"
           alt="message icon"
-          value={sampleQuestion.answers.toString()}
+          value={question.answers.toString()}
           title=""
           textStyles="small-regular text-dark400_light700"
         />
         <Metric
           imgUrl="/icons/eye.svg"
           alt="eye icon"
-          value={formatNumber(sampleQuestion.views)}
+          value={formatNumber(question.views)}
           title=""
           textStyles="small-regular text-dark400_light700"
         />
       </div>
 
-      <Preview content={sampleQuestion.content} />
+      <Preview content={question.content} />
 
       <div className="mt-8 flex flex-wrap gap-2">
-        {sampleQuestion.tags.map((tag: Tag) => (
+        {question.tags.map((tag: Tag) => (
           <TagCard
             key={tag._id}
             _id={tag._id as string}
@@ -128,7 +160,7 @@ const Question = async ({ params }: RouteParams) => {
             compact
           />
         ))}
-      </div>  
+      </div>
 
       <section className="my-5 ">
         {/* <AllAnswers
