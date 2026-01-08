@@ -29,8 +29,6 @@ const Tags = async ({ searchParams }: RouteParams) => {
           placeholder="Search tags..."
           otherClasses="flex-1"
         />
-
-  
       </div>
 
       <DataRenderer
@@ -46,8 +44,7 @@ const Tags = async ({ searchParams }: RouteParams) => {
           </div>
         )}
       />
-
-         </>
+    </>
   );
 };
 
