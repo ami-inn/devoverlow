@@ -3,32 +3,33 @@ import { Preview } from "@/components/editor/Preview";
 import Metric from "@/components/Metric";
 import UserAvatar from "@/components/UserAvatar";
 import ROUTES from "@/constants/routes";
-import { getQuestion } from "@/lib/actions/question.action";
+import { getQuestion, incrementViews } from "@/lib/actions/question.action";
 import { formatNumber, getTimeStamp } from "@/lib/utils";
 import { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 
 // const sampleQuestion = {
 //   _id: "question_id_123",
 //   title: "How to implement authentication in Next.js?",
 //   content: `
 //   ### Question
-  
+
 //   I'm building a web application using Next.js and I need to implement user authentication. What are the best practices for handling authentication in a Next.js app? Should I use JWTs, sessions, or some other method? Also, how can I securely store user credentials and manage user sessions?
-  
+
 //   ### Details
-  
+
 //   - I want to allow users to sign up, log in, and log out.
 //   - The app should have protected routes that only authenticated users can access.
 //   - I'm considering using third-party services like Auth0 or Firebase Authentication, but I'm open to other suggestions.
-  
+
 //   ### What I've Tried
-  
+
 //   So far, I've looked into using JWTs stored in HTTP-only cookies for authentication. However, I'm unsure about the security implications and how to handle token refreshes. Any guidance or code examples would be greatly appreciated!
-  
+
 //   ### Additional Context
-  
+
 //   The application is built with Next.js 13 using the App Router. I'm also using MongoDB as my database
 //   for storing user data.
 //   `,
@@ -76,9 +77,27 @@ export async function generateMetadata({
 
 const Question = async ({ params, searchParams }: RouteParams) => {
   const { id } = await params;
-  const { page, pageSize, filter } = await searchParams;
-  const { success, data: question } = await getQuestion({ questionId: id });
+  // const { page, pageSize, filter } = await searchParams;
+  // you can use promise.all to fetch multiple data in parallel if needed
+  //  const something = await Promise.all([
+  //   getQuestion({ questionId: id }),
+  // incrementViews({ questionId: id }),
+  // ])
 
+  // the issues of promise all is that if one fails the whole thing fails
+  // parellel fetching is good when you have independent data to fetch
+  // blocking rendering slower request increase serverload error handling complexity like that issues still there
+
+  const { success, data: question } = await getQuestion({ questionId: id });
+  // after using the question data we can increment the views
+  // after function from next/server helps to run code after the response is sent to the client
+  // its part of middleware api but can be used in server components as well
+  // it will not block the rendering of the page its mostly used for logging analytics or other non critical tasks that dont need to be completed before sending the response to the client
+  // it runs asyunchronously after the response is sent so it wont affect the performance of the page load
+
+  after(async () => {
+    await incrementViews({ questionId: id });
+  });
   if (!success || !question) return redirect("/404");
 
   return (
