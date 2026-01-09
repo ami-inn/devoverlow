@@ -1,5 +1,6 @@
 import TagCard from "@/components/cards/TagCard";
 import { Preview } from "@/components/editor/Preview";
+import AnswerForm from "@/components/forms/AnswerForm";
 import Metric from "@/components/Metric";
 import UserAvatar from "@/components/UserAvatar";
 import ROUTES from "@/constants/routes";
@@ -193,11 +194,11 @@ const Question = async ({ params, searchParams }: RouteParams) => {
       </section>
 
       <section className="my-5">
-        {/* <AnswerForm
+        <AnswerForm
           questionId={question._id}
           questionTitle={question.title}
           questionContent={question.content}
-        /> */}
+        />
       </section>
     </>
   );
