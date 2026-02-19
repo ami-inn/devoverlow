@@ -1212,3 +1212,17 @@ logger
    for rendering mdx content from external sources like database or file system in next.js applications
    npm i next-mdx-remote
    npm i bright - for syntax highlighting
+
+   ai integration for ai generating answers
+
+    openai for ai integration
+   lama is also a good option but it requires you to host the model yourself which can be resource intensive and complex to set up
+   also gemini by google is also a good option but its not available for everyone yet
+   mistro is also a good option but its not as powerful as openai or gemini
+   also deepseek is also a good option but its not as powerful as openai or gemini
+
+   also there vercel ai sdk which is a wrapper around openai and gemini and it provides a unified interface for both models and also provides some additional features like caching and rate limiting
+
+   headover to openai website and create an account to get your api key for ai integration
+
+   npm i ai @ai-sdk/openai

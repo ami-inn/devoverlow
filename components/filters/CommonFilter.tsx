@@ -44,11 +44,17 @@ const CommonFilter = ({
     router.push(newUrl, { scroll: false });
   };
 
+  console.log("paramsFilter in CommonFilter", filters);
+
   return (
     <div className={cn("relative", containerClasses)}>
       <Select
-        onValueChange={handleUpdateParams}
+        onValueChange={(value) => {
+          console.log("Value changed:", value);
+          handleUpdateParams(value);
+        }}
         defaultValue={paramsFilter || undefined}
+        onOpenChange={(open) => console.log("Select open state:", open)}
       >
         <SelectTrigger
           className={cn(
@@ -62,7 +68,7 @@ const CommonFilter = ({
           </div>
         </SelectTrigger>
 
-        <SelectContent>
+        <SelectContent className="z-[9999] bg-white dark:bg-gray-800">
           <SelectGroup>
             {filters.map((item) => (
               <SelectItem key={item.value} value={item.value}>

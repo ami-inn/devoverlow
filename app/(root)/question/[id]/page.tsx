@@ -1,3 +1,4 @@
+import AllAnswers from "@/components/answer/AllAnswers";
 import TagCard from "@/components/cards/TagCard";
 import { Preview } from "@/components/editor/Preview";
 import AnswerForm from "@/components/forms/AnswerForm";
@@ -197,14 +198,14 @@ const Question = async ({ params, searchParams }: RouteParams) => {
       </div>
 
       <section className="my-5 ">
-        {/* <AllAnswers
-          page={Number(page) || 1}
+        <AllAnswers
+          page={Number(1) || 1}
           isNext={answersResult?.isNext || false}
           data={answersResult?.answers}
           success={areAnswersLoaded}
           error={answersError}
           totalAnswers={answersResult?.totalAnswers || 0}
-        /> */}
+        />
       </section>
 
       <section className="my-5">
