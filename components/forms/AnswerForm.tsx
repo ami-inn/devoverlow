@@ -22,6 +22,7 @@ import { toast } from "sonner";
 // import { createAnswer } from "@/lib/actions/answer.action";
 import { api } from "@/lib/api";
 import { AnswerSchema } from "@/lib/validations";
+import { createAnswer } from "@/lib/actions/answer.action";
 
 const Editor = dynamic(() => import("@/components/editor"), {
   ssr: false,
@@ -49,13 +50,10 @@ const AnswerForm = ({ questionId, questionTitle, questionContent }: Props) => {
 
   const handleSubmit = async (values: z.infer<typeof AnswerSchema>) => {
     startAnsweringTransition(async () => {
-    //   const result = await createAnswer({
-    //     questionId,
-    //     content: values.content,
-    //   });
-    const result = {
-        success: true,
-    }
+      const result = await createAnswer({
+        questionId,
+        content: values.content,
+      });
 
       if (result.success) {
         form.reset();
@@ -73,56 +71,56 @@ const AnswerForm = ({ questionId, questionTitle, questionContent }: Props) => {
     });
   };
 
-//   const generateAIAnswer = async () => {
-//     if (session.status !== "authenticated") {
-//       return  toast.success("You must be logged in to use AI features.");
-//     }
+  //   const generateAIAnswer = async () => {
+  //     if (session.status !== "authenticated") {
+  //       return  toast.success("You must be logged in to use AI features.");
+  //     }
 
-//     setIsAISubmitting(true);
+  //     setIsAISubmitting(true);
 
-//     const userAnswer = editorRef.current?.getMarkdown();
+  //     const userAnswer = editorRef.current?.getMarkdown();
 
-//     try {
-//       const { success, data, error } = await api.ai.getAnswer(
-//         questionTitle,
-//         questionContent,
-//         userAnswer
-//       );
+  //     try {
+  //       const { success, data, error } = await api.ai.getAnswer(
+  //         questionTitle,
+  //         questionContent,
+  //         userAnswer
+  //       );
 
-//       if (!success) {
-//         return toast({
-//           title: "Error",
-//           description: error?.message,
-//           variant: "destructive",
-//         });
-//       }
+  //       if (!success) {
+  //         return toast({
+  //           title: "Error",
+  //           description: error?.message,
+  //           variant: "destructive",
+  //         });
+  //       }
 
-//       const formattedAnswer = data.replace(/<br>/g, " ").toString().trim();
+  //       const formattedAnswer = data.replace(/<br>/g, " ").toString().trim();
 
-//       if (editorRef.current) {
-//         editorRef.current.setMarkdown(formattedAnswer);
+  //       if (editorRef.current) {
+  //         editorRef.current.setMarkdown(formattedAnswer);
 
-//         form.setValue("content", formattedAnswer);
-//         form.trigger("content");
-//       }
+  //         form.setValue("content", formattedAnswer);
+  //         form.trigger("content");
+  //       }
 
-//       toast({
-//         title: "Success",
-//         description: "AI generated answer has been generated",
-//       });
-//     } catch (error) {
-//       toast({
-//         title: "Error",
-//         description:
-//           error instanceof Error
-//             ? error.message
-//             : "There was a problem with your request",
-//         variant: "destructive",
-//       });
-//     } finally {
-//       setIsAISubmitting(false);
-//     }
-//   };
+  //       toast({
+  //         title: "Success",
+  //         description: "AI generated answer has been generated",
+  //       });
+  //     } catch (error) {
+  //       toast({
+  //         title: "Error",
+  //         description:
+  //           error instanceof Error
+  //             ? error.message
+  //             : "There was a problem with your request",
+  //         variant: "destructive",
+  //       });
+  //     } finally {
+  //       setIsAISubmitting(false);
+  //     }
+  //   };
 
   return (
     <div>
@@ -133,7 +131,7 @@ const AnswerForm = ({ questionId, questionTitle, questionContent }: Props) => {
         <Button
           className="btn light-border-2 gap-1.5 rounded-md border px-4 py-2.5 text-primary-500 shadow-none dark:text-primary-500"
           disabled={isAISubmitting}
-        //   onClick={generateAIAnswer}
+          //   onClick={generateAIAnswer}
         >
           {isAISubmitting ? (
             <>
