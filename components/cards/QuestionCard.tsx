@@ -13,7 +13,7 @@ interface Props {
 }
 
 const QuestionCard = ({
-  question: { _id, title, tags, author, createdAt, upvotes, answers, views },
+  question: { _id, title, tags, author, createdAt, upVotes, answers, views },
   showActionBtns = false,
 }: Props) => {
   return (
@@ -57,7 +57,7 @@ const QuestionCard = ({
           <Metric
             imgUrl="/icons/like.svg"
             alt="like"
-            value={upvotes}
+            value={upVotes}
             title=" Votes"
             textStyles="small-medium text-dark400_light800"
           />

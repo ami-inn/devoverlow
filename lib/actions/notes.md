@@ -405,14 +405,688 @@ Post:
 - [ ] Log metrics and trace spans
 
 ---
+<!-- new -->
 
-## 23) TODO: Map to Your Actions
+## 23) MongoDB Aggregation Pipelines
 
-- TODO(listThings): confirm filters, pagination, indexes, cache tags
-- TODO(getThingById): confirm projection, NotFound vs Forbidden semantics
-- TODO(createThing): idempotency key strategy and unique constraints
-- TODO(updateThing): optimistic locking/version field presence
-- TODO(deleteThing): soft delete vs hard delete, cleanup linked data
-- TODO(searchThings): FTS strategy and index configuration
+Aggregation pipelines transform and combine documents through a sequence of stages. Think of it as a data processing pipeline where each stage performs an operation and passes results to the next stage.
 
-Once you drop your actual actions here, mirror each against the checklist and patterns above.
+### 23.1 Why Use Aggregation?
+
+- **Join multiple collections** ($lookup) - equivalent to SQL JOINs
+- **Complex data transformations** - reshape, compute, filter
+- **Performance** - single query instead of multiple round-trips
+- **Aggregation operations** - group, count, sum, average
+- **Pre-filtering before joins** - reduce data processed
+
+### 23.2 Core Pipeline Stages
+
+#### $match - Filter documents (like WHERE in SQL)
+```ts
+{ $match: { author: new Types.ObjectId(userId) } }
+// Filters to only documents where author matches userId
+// ALWAYS put $match early in pipeline to reduce data processed
+```
+
+#### $lookup - Join collections (like JOIN in SQL)
+```ts
+{
+  $lookup: {
+    from: "questions",        // collection to join
+    localField: "question",   // field in current collection
+    foreignField: "_id",      // field in target collection to match
+    as: "questionData"        // output array name
+  }
+}
+// Performs a left outer join, returns array even if single match
+```
+
+#### $unwind - Deconstruct array field
+```ts
+{ $unwind: "$questionData" }
+// Transforms: { questionData: [{...}] } 
+// Into: { questionData: {...} }
+// Creates one document per array element
+```
+
+#### $group - Aggregate documents (like GROUP BY)
+```ts
+{
+  $group: {
+    _id: "$tags",              // group by field
+    count: { $sum: 1 },        // count occurrences
+    totalUpvotes: { $sum: "$upvotes" },
+    avgViews: { $avg: "$views" }
+  }
+}
+```
+
+#### $project - Select/reshape fields
+```ts
+{
+  $project: {
+    _id: "$tagInfo._id",
+    name: "$tagInfo.name",
+    count: 1,                  // 1 = include, 0 = exclude
+    author: 0                  // exclude sensitive fields
+  }
+}
+```
+
+#### $sort, $skip, $limit - Pagination & ordering
+```ts
+{ $sort: { createdAt: -1 } }  // -1 = desc, 1 = asc
+{ $skip: (page - 1) * pageSize }
+{ $limit: pageSize }
+```
+
+#### $count - Count matching documents
+```ts
+{ $count: "totalCount" }
+// Returns: { totalCount: 42 }
+```
+
+### 23.3 Real Example: Saved Questions with Full Details
+
+**Goal**: Fetch user's saved questions with author details, tags, searchability, and pagination.
+
+```ts
+// From: getSavedQuestions in collection.action.ts
+const pipeline: PipelineStage[] = [
+  // Stage 1: Filter to current user's saved items
+  { $match: { author: new Types.ObjectId(userId) } },
+  
+  // Stage 2: Join with questions collection
+  {
+    $lookup: {
+      from: "questions",
+      localField: "question",     // Collection.question (ObjectId)
+      foreignField: "_id",        // Question._id
+      as: "question"              // Output field name
+    }
+  },
+  
+  // Stage 3: Flatten question array (was array of 1)
+  { $unwind: "$question" },
+  
+  // Stage 4: Join question author with users collection
+  {
+    $lookup: {
+      from: "users",
+      localField: "question.author",
+      foreignField: "_id",
+      as: "question.author"       // Nested path
+    }
+  },
+  
+  // Stage 5: Flatten author array
+  { $unwind: "$question.author" },
+  
+  // Stage 6: Join question tags with tags collection
+  {
+    $lookup: {
+      from: "tags",
+      localField: "question.tags",  // Array of tag IDs
+      foreignField: "_id",
+      as: "question.tags"            // Replace with full tag objects
+    }
+  },
+];
+
+// Stage 7 (conditional): Search filter
+if (query) {
+  pipeline.push({
+    $match: {
+      $or: [
+        { "question.title": { $regex: query, $options: "i" } },
+        { "question.content": { $regex: query, $options: "i" } }
+      ]
+    }
+  });
+}
+
+// Get total count for pagination
+const [totalCount] = await Collection.aggregate([
+  ...pipeline,
+  { $count: "count" }
+]);
+
+// Stage 8-10: Sort, paginate, project
+pipeline.push(
+  { $sort: { "question.createdAt": -1 } },
+  { $skip: skip },
+  { $limit: limit },
+  { $project: { question: 1, author: 1 } }  // Only return needed fields
+);
+
+const results = await Collection.aggregate(pipeline);
+```
+
+**Why this approach?**
+- Single query retrieves collections + questions + users + tags
+- Search applied AFTER joins so we can search within question content
+- Count executed separately to know if more pages exist
+- Projection minimizes data transfer
+
+### 23.4 Real Example: User's Top Tags
+
+**Goal**: Find user's 10 most-used tags from their questions.
+
+```ts
+// From: getUsersProfile in user.action.ts
+const pipeline: PipelineStage[] = [
+  // Stage 1: Get all user's questions
+  { $match: { author: new Types.ObjectId(userId) } },
+  
+  // Stage 2: Deconstruct tags array - one doc per tag
+  // Question: { tags: [tag1, tag2] }
+  // Becomes: 2 documents, one with tag1, one with tag2
+  { $unwind: "$tags" },
+  
+  // Stage 3: Group by tag ID and count occurrences
+  {
+    $group: {
+      _id: "$tags",              // Group key
+      count: { $sum: 1 }         // Increment counter for each doc
+    }
+  },
+  
+  // Stage 4: Join with tags collection to get tag names
+  {
+    $lookup: {
+      from: "tags",
+      localField: "_id",          // _id from grouping (tag ObjectId)
+      foreignField: "_id",
+      as: "tagInfo"
+    }
+  },
+  
+  // Stage 5: Flatten tag info
+  { $unwind: "$tagInfo" },
+  
+  // Stage 6: Sort by most used
+  { $sort: { count: -1 } },
+  
+  // Stage 7: Limit to top 10
+  { $limit: 10 },
+  
+  // Stage 8: Shape output
+  {
+    $project: {
+      _id: "$tagInfo._id",
+      name: "$tagInfo.name",
+      count: 1
+    }
+  }
+];
+
+const tags = await Question.aggregate(pipeline);
+// Returns: [{ _id: "...", name: "javascript", count: 15 }, ...]
+```
+
+**Key insight**: $unwind + $group is powerful for analyzing array relationships.
+
+### 23.5 Real Example: User Statistics
+
+**Goal**: Compute total questions, answers, upvotes, and views for badge calculation.
+
+```ts
+// From: getUserStats in user.action.ts
+
+// Get question stats
+const [questionStats] = await Question.aggregate([
+  { $match: { author: new Types.ObjectId(userId) } },
+  {
+    $group: {
+      _id: null,                       // Single group for all docs
+      count: { $sum: 1 },              // Count questions
+      upvotes: { $sum: "$upvotes" },   // Sum all upvotes
+      views: { $sum: "$views" }        // Sum all views
+    }
+  }
+]);
+// Returns: { _id: null, count: 42, upvotes: 156, views: 3421 }
+
+// Get answer stats separately
+const [answerStats] = await Answer.aggregate([
+  { $match: { author: new Types.ObjectId(userId) } },
+  {
+    $group: {
+      _id: null,
+      count: { $sum: 1 },
+      upvotes: { $sum: "$upvotes" }
+    }
+  }
+]);
+
+// Combine for badge calculation
+const badges = assignBadges({
+  criteria: [
+    { type: "ANSWER_COUNT", count: answerStats.count },
+    { type: "QUESTION_COUNT", count: questionStats.count },
+    { type: "QUESTION_UPVOTES", count: questionStats.upvotes + answerStats.upvotes },
+    { type: "TOTAL_VIEWS", count: questionStats.views }
+  ]
+});
+```
+
+**Why separate aggregations?**
+- Questions and answers are in different collections
+- Each has different fields to aggregate
+- Results combined in application layer
+
+### 23.6 Performance Best Practices
+
+#### 1. Filter Early ($match first)
+```ts
+// ✅ GOOD: Filter before expensive operations
+[
+  { $match: { tenantId } },      // Reduces documents early
+  { $lookup: { ... } },
+  { $unwind: ... }
+]
+
+// ❌ BAD: Filter after joins
+[
+  { $lookup: { ... } },           // Processes ALL documents
+  { $unwind: ... },
+  { $match: { tenantId } }        // Filters too late
+]
+```
+
+#### 2. Index Pipeline Fields
+```ts
+// Ensure indexes exist for:
+db.collection.createIndex({ author: 1 });           // $match fields
+db.collection.createIndex({ createdAt: -1 });      // $sort fields
+db.collection.createIndex({ author: 1, createdAt: -1 }); // Compound
+```
+
+#### 3. Project Early to Reduce Memory
+```ts
+{
+  $project: {
+    _id: 1,
+    title: 1,
+    author: 1
+    // Exclude large content fields until needed
+  }
+}
+```
+
+#### 4. Avoid $lookup on Large Collections
+```ts
+// If possible, denormalize frequently-accessed data
+// Example: Store author name in question doc to avoid user lookup
+```
+
+#### 5. Use allowDiskUse for Large Datasets
+```ts
+await Collection.aggregate(pipeline, { allowDiskUse: true });
+// Allows MongoDB to write temp data to disk if exceeds 100MB memory
+```
+
+#### 6. Limit Early When Possible
+```ts
+// ✅ If sorting by indexed field, limit early
+[
+  { $match: { ... } },
+  { $sort: { createdAt: -1 } },  // Indexed
+  { $limit: 10 },                 // Early limit
+  { $lookup: { ... } }            // Only 10 docs joined
+]
+```
+
+### 23.7 Common Patterns
+
+#### Pattern: Pagination with Total Count
+```ts
+// Get count
+const [{ count }] = await Model.aggregate([
+  ...filterStages,
+  { $count: "count" }
+]);
+
+// Get paginated data
+const data = await Model.aggregate([
+  ...filterStages,
+  { $sort: sortCriteria },
+  { $skip: (page - 1) * pageSize },
+  { $limit: pageSize }
+]);
+
+return { data, hasMore: count > page * pageSize };
+```
+
+#### Pattern: Conditional Pipeline Stages
+```ts
+const pipeline: PipelineStage[] = [{ $match: { ... } }];
+
+if (query) {
+  pipeline.push({
+    $match: { name: { $regex: query, $options: "i" } }
+  });
+}
+
+if (sortField) {
+  pipeline.push({ $sort: { [sortField]: sortDir } });
+}
+```
+
+#### Pattern: Nested Lookups for Deep Relations
+```ts
+// User -> Questions -> Tags
+[
+  { $match: { _id: userId } },
+  { $lookup: { from: "questions", ... } },
+  { $unwind: "$questions" },
+  { $lookup: { from: "tags", localField: "questions.tags", ... } }
+]
+```
+
+### 23.8 Debugging Pipelines
+
+#### Use $out to inspect intermediate stages
+```ts
+const pipeline = [
+  { $match: { ... } },
+  { $lookup: { ... } },
+  { $out: "debug_collection" }  // Write results to temp collection
+];
+await Model.aggregate(pipeline);
+// Then inspect: db.debug_collection.find()
+```
+
+#### Add $project to see stage output
+```ts
+[
+  { $match: { ... } },
+  { $project: { debug: "$$ROOT" } },  // $$ROOT = entire document
+  { $lookup: { ... } }
+]
+```
+
+#### Check explain plan
+```ts
+const cursor = Model.aggregate(pipeline);
+const explain = await cursor.explain();
+console.log(JSON.stringify(explain, null, 2));
+// Shows indexes used, documents examined, execution time
+```
+
+### 23.9 Type Safety with TypeScript
+
+```ts
+import { PipelineStage, Types } from "mongoose";
+
+// Define pipeline with proper typing
+const pipeline: PipelineStage[] = [
+  { $match: { author: new Types.ObjectId(userId) } },
+  { $lookup: { from: "users", localField: "author", foreignField: "_id", as: "authorData" } }
+];
+
+// Parse results with Zod or type assertion
+const results = await Question.aggregate(pipeline);
+const parsed = ResultSchema.parse(JSON.parse(JSON.stringify(results)));
+```
+
+### 23.10 Common Pitfalls
+
+#### ❌ Forgetting $unwind after $lookup
+```ts
+// $lookup returns array even for 1-to-1 relations
+{ $lookup: { ... } }
+// Doc now has: { user: [{ name: "John" }] }
+
+// Must unwind to get: { user: { name: "John" } }
+{ $unwind: "$user" }
+```
+
+#### ❌ Wrong field path syntax
+```ts
+{ $project: { name: "tagInfo.name" } }  // ❌ String literal
+{ $project: { name: "$tagInfo.name" } } // ✅ Field reference ($ prefix)
+```
+
+#### ❌ Not handling empty arrays
+```ts
+{ $unwind: "$tags" }  // Drops docs with empty tags array
+{ $unwind: { path: "$tags", preserveNullAndEmptyArrays: true } } // ✅ Keeps them
+```
+
+#### ❌ Accumulator in $project
+```ts
+{ $project: { total: { $sum: "$values" } } }  // ❌ Won't work
+// $sum is for $group, use $reduce in $project:
+{ $project: { total: { $reduce: { input: "$values", initialValue: 0, in: { $add: ["$$value", "$$this"] } } } } }
+```
+
+### 23.11 When NOT to Use Aggregation
+
+- Simple queries (use `.find()` instead)
+- Real-time updates (aggregation results aren't reactive)
+- When you need cursors with `.stream()` for very large datasets
+- If denormalization would be simpler and faster
+
+---
+
+## 24) MongoDB Transactions (Real-World Pattern)
+
+Transactions ensure atomicity - all operations succeed or all fail together, preventing data inconsistencies.
+
+### 24.1 Vote Action Transaction Example
+
+From `createVote` in vote.action.ts - demonstrates a complex multi-step transaction:
+
+```ts
+const session = await mongoose.startSession();
+session.startTransaction();
+
+try {
+  // Step 1: Find the content (question/answer) with session
+  const Model = targetType === "question" ? Question : Answer;
+  const contentDoc = await Model.findById(targetId).session(session);
+  if (!contentDoc) throw new Error("Content not found");
+  
+  // Step 2: Check for existing vote (within transaction)
+  const existingVote = await Vote.findOne({
+    author: userId,
+    actionId: targetId,
+    actionType: targetType,
+  }).session(session);
+  
+  // Step 3: Handle three scenarios
+  if (existingVote) {
+    if (existingVote.voteType === voteType) {
+      // Same vote = remove it (toggle off)
+      await Vote.deleteOne({ _id: existingVote._id }).session(session);
+      await updateVoteCount({ targetId, targetType, voteType, change: -1 }, session);
+    } else {
+      // Different vote = change vote type
+      await Vote.findByIdAndUpdate(
+        existingVote._id,
+        { voteType },
+        { new: true, session }
+      );
+      // Decrement old vote, increment new vote
+      await updateVoteCount({ targetId, targetType, voteType: existingVote.voteType, change: -1 }, session);
+      await updateVoteCount({ targetId, targetType, voteType, change: 1 }, session);
+    }
+  } else {
+    // First-time vote = create new
+    await Vote.create([{ author: userId, actionId: targetId, actionType: targetType, voteType }], { session });
+    await updateVoteCount({ targetId, targetType, voteType, change: 1 }, session);
+  }
+  
+  // Step 4: Commit if all succeeded
+  await session.commitTransaction();
+  session.endSession();
+  
+  revalidatePath(`/questions/${targetId}`);
+  return { success: true };
+  
+} catch (error) {
+  // Step 5: Rollback on any error
+  await session.abortTransaction();
+  session.endSession();
+  return handleError(error) as ErrorResponse;
+}
+```
+
+### 24.2 Why This Needs a Transaction
+
+**Without transaction**, this sequence could fail:
+1. Vote record created ✅
+2. Vote count update fails ❌  
+**Result**: Database inconsistency (vote exists but count wrong)
+
+**With transaction**:
+- All operations in session scope
+- If any fails, all rollback automatically
+- Database stays consistent
+
+### 24.3 Transaction Best Practices
+
+#### 1. Pass session to all operations
+```ts
+// ✅ All ops use session
+await Model.findById(id).session(session);
+await Model.create([data], { session });
+await Model.updateOne({ _id: id }, update, { session });
+
+// ❌ This op NOT in transaction
+await Model.updateOne({ _id: id }, update);  // Missing session!
+```
+
+#### 2. Use array for Model.create() in transactions
+```ts
+// ✅ CORRECT
+await Vote.create([{ author, actionId }], { session });
+
+// ❌ WRONG - won't use session properly
+await Vote.create({ author, actionId }, { session });
+```
+
+#### 3. Always end session in finally block
+```ts
+const session = await mongoose.startSession();
+session.startTransaction();
+
+try {
+  // ... operations ...
+  await session.commitTransaction();
+  return { success: true };
+} catch (error) {
+  await session.abortTransaction();
+  throw error;
+} finally {
+  session.endSession();  // Always cleanup
+}
+```
+
+#### 4. Keep transactions short
+```ts
+// ❌ BAD - external API call in transaction
+await session.startTransaction();
+await Model.create(..., { session });
+await fetch("https://api.external.com");  // Slow!
+await session.commitTransaction();
+
+// ✅ GOOD - transaction only for DB ops
+await session.startTransaction();
+await Model.create(..., { session });
+await session.commitTransaction();
+await fetch("https://api.external.com");  // After transaction
+```
+
+#### 5. Transaction timeout configuration
+```ts
+const session = await mongoose.startSession();
+session.startTransaction({
+  readConcern: { level: 'snapshot' },
+  writeConcern: { w: 'majority' },
+  maxCommitTimeMS: 5000  // 5 second timeout
+});
+```
+
+### 24.4 Helper Function Pattern
+
+Extract transaction logic into reusable helper:
+
+```ts
+// Helper that manages session lifecycle
+async function updateVoteCount(
+  params: UpdateVoteCountParams,
+  session?: ClientSession  // Optional - can be called standalone or in transaction
+): Promise<ActionResponse> {
+  const { targetId, targetType, voteType, change } = params;
+  const Model = targetType === "question" ? Question : Answer;
+  const voteField = voteType === "upvote" ? "upVotes" : "downVotes";
+  
+  try {
+    const result = await Model.findByIdAndUpdate(
+      targetId,
+      { $inc: { [voteField]: change } },
+      { new: true, session }  // Use session if provided
+    );
+    
+    if (!result) throw new Error("Failed to update vote count");
+    return { success: true };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+// Can be called standalone
+await updateVoteCount({ targetId, targetType, voteType, change: 1 });
+
+// Or within a transaction
+await updateVoteCount({ targetId, targetType, voteType, change: 1 }, session);
+```
+
+### 24.5 When to Use Transactions
+
+**✅ Use transactions when:**
+- Multiple writes must succeed together (vote + count update)
+- Maintaining referential integrity (delete parent + children)
+- Financial operations (debit one account, credit another)
+- Preventing race conditions (check + create patterns)
+
+**❌ Skip transactions when:**
+- Single write operation
+- Read-only operations
+- Cross-database operations (transactions don't span DBs)
+- Performance is critical and eventual consistency is acceptable
+
+### 24.6 Common Transaction Patterns
+
+#### Pattern: Safe Toggle (like vote on/off)
+```ts
+const existingRecord = await Model.findOne({ ... }).session(session);
+if (existingRecord) {
+  await Model.deleteOne({ _id: existingRecord._id }).session(session);
+  await updateCounter({ change: -1 }, session);
+} else {
+  await Model.create([{ ... }], { session });
+  await updateCounter({ change: 1 }, session);
+}
+```
+
+#### Pattern: Swap/Replace
+```ts
+// Change vote from upvote to downvote
+await Vote.findByIdAndUpdate(existingVote._id, { voteType: newType }, { session });
+await updateCounter({ type: oldType, change: -1 }, session);
+await updateCounter({ type: newType, change: 1 }, session);
+```
+
+#### Pattern: Conditional Create (avoid duplicates)
+```ts
+const existing = await Model.findOne({ uniqueKey }).session(session);
+if (existing) {
+  throw new Error("Already exists");
+}
+await Model.create([{ uniqueKey, ...data }], { session });
+```
+
+---
