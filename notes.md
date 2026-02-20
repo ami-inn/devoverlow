@@ -1235,3 +1235,6 @@ logger
    it is designed to work with react's concurrent rendering features and can help you to avoid issues
 
    if using await in server compoenent it will block its rendering until await statement finished.pasing a promise from blocking the renderinng of a server component.
+
+   aggregtion pipeline
+   a series of steps that we aggregate togethere which means we pass the data through stages transforming as needed.give some data put in this format give some more data if query do that as well.
