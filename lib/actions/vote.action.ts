@@ -14,6 +14,7 @@ import {
   HasVotedSchema,
   UpdateVoteCountSchema,
 } from "../validations";
+import { createInteraction } from "./interaction.action";
 // import { createInteraction } from "./interaction.action";
 
 async function updateVoteCount(
@@ -154,14 +155,14 @@ export async function createVote(
     }
 
     // log the interaction
-    // after(async () => {
-    //   await createInteraction({
-    //     action: voteType,
-    //     actionId: targetId,
-    //     actionTarget: targetType,
-    //     authorId: contentAuthorId,
-    //   });
-    // });
+    after(async () => {
+      await createInteraction({
+        action: voteType,
+        actionId: targetId,
+        actionTarget: targetType,
+        authorId: contentAuthorId,
+      });
+    });
 
     await session.commitTransaction();
     session.endSession();

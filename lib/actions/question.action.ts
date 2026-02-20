@@ -1,11 +1,18 @@
 "use server";
 
-import  "@/database/user.model";
+import "@/database/user.model";
 import Question, { IQuestionModel } from "@/database/question.model";
 import action from "../handlers/action";
 import handleError from "../handlers/error";
-import { AskQuestionSchema, DeleteQuestionSchema, EditQuestionSchema, GetQuestionSchema, IncrementViewsSchema, PaginatedSearchParamsSchema } from "../validations";
-import mongoose,{QueryFilter,Types} from "mongoose";
+import {
+  AskQuestionSchema,
+  DeleteQuestionSchema,
+  EditQuestionSchema,
+  GetQuestionSchema,
+  IncrementViewsSchema,
+  PaginatedSearchParamsSchema,
+} from "../validations";
+import mongoose, { QueryFilter, Types } from "mongoose";
 import { after } from "next/server";
 import TagQuestion from "@/database/tag-question.model";
 import Tag, { ITag } from "@/database/tag.model";
@@ -13,7 +20,8 @@ import { cache } from "react";
 import dbConnect from "../mongoose";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
-import { Answer, Collection, Vote } from "@/database";
+import { Answer, Collection, Interaction, Vote } from "@/database";
+import { createInteraction } from "./interaction.action";
 // cache for get question it improves performance by storing results of previous fetches
 
 export async function createQuestion(
@@ -24,7 +32,7 @@ export async function createQuestion(
     schema: AskQuestionSchema,
     authorize: true,
   });
-  console.log(validationResult,'validation result in create question');
+  console.log(validationResult, "validation result in create question");
   if (validationResult instanceof Error) {
     return handleError(validationResult) as ErrorResponse;
   }
@@ -67,7 +75,7 @@ export async function createQuestion(
       });
     }
 
-    // insert tag-question relationships 
+    // insert tag-question relationships
     // bulk insert for efficiency
     // we insert all at once instead of one by one
     await TagQuestion.insertMany(tagQuestionDocuments, { session });
@@ -82,14 +90,14 @@ export async function createQuestion(
 
     // log the interaction
     // log the interaction
-    // after(async () => {
-    //   await createInteraction({
-    //     action: "post",
-    //     actionId: question._id.toString(),
-    //     actionTarget: "question",
-    //     authorId: userId as string,
-    //   });
-    // });
+    after(async () => {
+      await createInteraction({
+        action: "post",
+        actionId: question._id.toString(),
+        actionTarget: "question",
+        authorId: userId as string,
+      });
+    });
 
     await session.commitTransaction();
 
@@ -126,7 +134,7 @@ export async function editQuestion(
 
   try {
     // Fetch the question to be edited
-    // populate tags to compare existing ones 
+    // populate tags to compare existing ones
     // with populate it fetches full tag documents instead of just ids
     const question = await Question.findById(questionId).populate("tags");
     if (!question) throw new Error("Question not found");
@@ -146,7 +154,7 @@ export async function editQuestion(
     const tagsToAdd = tags.filter(
       (tag) =>
         // check if tag is not already associated with the question
-      // some method checks if any existing tag matches the new tag (case insensitive)
+        // some method checks if any existing tag matches the new tag (case insensitive)
         !question.tags.some(
           (t: ITag) => t.name.toLowerCase() === tag.toLowerCase()
         )
@@ -178,7 +186,7 @@ export async function editQuestion(
 
     // Remove tags
     if (tagsToRemove.length > 0) {
-      console.log(tagsToRemove,'tags to remove');
+      console.log(tagsToRemove, "tags to remove");
       const tagIdsToRemove = tagsToRemove.map((tag: ITag) => tag._id);
 
       await Tag.updateMany(
@@ -219,14 +227,12 @@ export async function editQuestion(
   }
 }
 
-
 // get question
-// using cache to improve performance 
+// using cache to improve performance
 // it stores results of previous fetches
 export const getQuestion = cache(async function getQuestion(
   params: GetQuestionParams
 ): Promise<ActionResponse<Question>> {
-  
   await dbConnect();
   const validationResult = await action({
     params,
@@ -252,7 +258,6 @@ export const getQuestion = cache(async function getQuestion(
   }
 });
 
-
 // server actions are designe dto be used in different contexts
 
 // 1. in server components : they act like regular async functions fetching data directly from the server
@@ -261,7 +266,6 @@ export const getQuestion = cache(async function getQuestion(
 
 // its called direct innovation . when you use a server action in a server component youre directly caling the function on the server theres no http request
 // involved at all becasue both the server component and there server action are executing in the same server environment.
-
 
 export async function getQuestions(params: PaginatedSearchParams): Promise<
   ActionResponse<{
@@ -273,27 +277,45 @@ export async function getQuestions(params: PaginatedSearchParams): Promise<
     params, // params to be validated
     schema: PaginatedSearchParamsSchema,
   });
-  
+
   if (validationResult instanceof Error) {
     return handleError(validationResult) as ErrorResponse;
   }
-  
+
   // destructure validated params
   const { page = 1, pageSize = 10, query, filter } = params;
-  
+
   // calculate skip and limit for pagination
   // skip calculation = (page - 1) * pageSize means skip all items from previous pages
   const skip = (Number(page) - 1) * pageSize;
   const limit = pageSize;
-  
-  
+
   //  filter query object to build dynamic queries
   const filterQuery: QueryFilter<typeof Question> = {};
-  let sortCriteria = {};  //  for to hold sorting criteria
-  
+  let sortCriteria = {}; //  for to hold sorting criteria
+
   try {
     // Recommendations
     await dbConnect();
+
+    // Recommendations
+    if (filter === "recommended") {
+      const session = await auth();
+      const userId = session?.user?.id;
+
+      if (!userId) {
+        return { success: true, data: { questions: [], isNext: false } };
+      }
+
+      const recommended = await getRecommendedQuestions({
+        userId,
+        query,
+        skip,
+        limit,
+      });
+
+      return { success: true, data: recommended };
+    }
 
     // Search
     if (query) {
@@ -307,7 +329,7 @@ export async function getQuestions(params: PaginatedSearchParams): Promise<
     // Filters
     switch (filter) {
       case "newest":
-        sortCriteria = { createdAt: -1 }; 
+        sortCriteria = { createdAt: -1 };
         break;
       case "unanswered":
         filterQuery.answers = 0;
@@ -322,7 +344,7 @@ export async function getQuestions(params: PaginatedSearchParams): Promise<
     }
 
     const totalQuestions = await Question.countDocuments(filterQuery);
-  
+
     const questions = await Question.find(filterQuery)
       .populate("tags", "name") // populate tags with only name field that means  it will return only name of tags
       .populate("author", "name image") // only fetch name and image of author
@@ -395,7 +417,6 @@ export async function getHotQuestions(): Promise<ActionResponse<Question[]>> {
   }
 }
 
-
 export async function deleteQuestion(
   params: DeleteQuestionParams
 ): Promise<ActionResponse> {
@@ -458,14 +479,14 @@ export async function deleteQuestion(
     await Question.findByIdAndDelete(questionId).session(session);
 
     // log the interaction
-    // after(async () => {
-    //   await createInteraction({
-    //     action: "delete",
-    //     actionId: questionId,
-    //     actionTarget: "question",
-    //     authorId: user?.id as string,
-    //   });
-    // });
+    after(async () => {
+      await createInteraction({
+        action: "delete",
+        actionId: questionId,
+        actionTarget: "question",
+        authorId: user?.id as string,
+      });
+    });
 
     await session.commitTransaction();
     session.endSession();
@@ -479,4 +500,60 @@ export async function deleteQuestion(
 
     return handleError(error) as ErrorResponse;
   }
+}
+
+export async function getRecommendedQuestions({
+  userId,
+  query,
+  skip,
+  limit,
+}: RecommendationParams) {
+  const interactions = await Interaction.find({
+    user: new Types.ObjectId(userId),
+    actionType: "question",
+    action: { $in: ["view", "upvote", "bookmark", "post"] },
+  })
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .lean();
+
+  const interactedQuestionIds = interactions.map((i) => i.actionId); // extract question ids from interactions
+
+  const interactedQuestions = await Question.find({
+    _id: { $in: interactedQuestionIds },
+  }).select("tags"); // fetch tags of interacted questions to find common tags for recommendations
+
+  const allTags = interactedQuestions.flatMap((q) =>
+    q.tags.map((tag: Types.ObjectId) => tag.toString())
+  ); // collect all tags from interacted questions to find unique tags for recommendation
+
+  const uniqueTagIds = [...new Set(allTags)]; // get unique tag ids to avoid redundant queries
+
+  const recommendedQuery: QueryFilter<typeof Question> = {
+    _id: { $nin: interactedQuestionIds },
+    author: { $ne: new Types.ObjectId(userId) },
+    tags: { $in: uniqueTagIds.map((id) => new Types.ObjectId(id)) },
+  }; // base query for recommendations to exclude already interacted questions and the user's own questions and include questions with common tags
+
+  if (query) {
+    recommendedQuery.$or = [
+      { title: { $regex: query, $options: "i" } },
+      { content: { $regex: query, $options: "i" } },
+    ];
+  } // if there are no tags from interacted questions, recommend based on recent activity or popularity
+
+  const total = await Question.countDocuments(recommendedQuery); // count total recommended questions for pagination
+
+  const questions = await Question.find(recommendedQuery)
+    .populate("tags", "name")
+    .populate("author", "name image")
+    .sort({ upvotes: -1, views: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  return {
+    questions: JSON.parse(JSON.stringify(questions)),
+    isNext: total > skip + questions.length,
+  };
 }
