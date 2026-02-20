@@ -4,7 +4,7 @@ import { EMPTY_ANSWERS } from "@/constants/states";
 import AnswerCard from "../cards/AnswerCard";
 import DataRenderer from "../DataRenderer";
 import CommonFilter from "../filters/CommonFilter";
-// import Pagination from "../Pagination";
+import Pagination from "../Pagination";
 
 interface Props extends ActionResponse<Answer[]> {
   page: number;
@@ -43,7 +43,7 @@ const AllAnswers = ({
         }
       />
 
-      {/* <Pagination page={page} isNext={isNext} /> */}
+      <Pagination page={page} isNext={isNext} />
     </div>
   );
 };

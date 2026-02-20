@@ -85,7 +85,7 @@ export async function generateMetadata({
 
 const Question = async ({ params, searchParams }: RouteParams) => {
   const { id } = await params;
-  // const { page, pageSize, filter } = await searchParams;
+  const { page, pageSize, filter } = await searchParams;
   // you can use promise.all to fetch multiple data in parallel if needed
   //  const something = await Promise.all([
   //   getQuestion({ questionId: id }),
@@ -114,9 +114,9 @@ const Question = async ({ params, searchParams }: RouteParams) => {
     error: answersError,
   } = await getAnswers({
     questionId: id,
-    page: 1,
-    pageSize: 10,
-    filter: "latest",
+    page: page ? parseInt(page as string, 10) : 1,
+    pageSize: pageSize ? parseInt(pageSize as string, 10) : 10,
+    filter: filter ? (filter as string) : "latest",
   });
 
   const hasVotedPromise = hasVoted({
