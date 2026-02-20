@@ -1241,3 +1241,9 @@ logger
 
 
    we want to track wht kind of content user is posting or are you interested in upvotes and downvotes thery voring or do sou simply want to knwo what kind of content there viewing
+
+
+   how seo optimize websites?
+   there are two ways to add metadata to your next.js application
+   1. config basesd metadat: export static metadat object or a dynamic genertemetadata function from your page or layout file
+   2. file based metadata: create a file named metadata.ts or metadata.js in the same directory as your page or layout file and export a metadata object from it

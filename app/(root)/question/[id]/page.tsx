@@ -75,6 +75,8 @@ export async function generateMetadata({
   return {
     title: question.title,
     description: question.content.slice(0, 100),
+    // if you have image for the question you can add it here for better seo and social media sharing
+    
     twitter: {
       card: "summary_large_image",
       title: question.title,
