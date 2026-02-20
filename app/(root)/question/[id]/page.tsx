@@ -3,10 +3,12 @@ import TagCard from "@/components/cards/TagCard";
 import { Preview } from "@/components/editor/Preview";
 import AnswerForm from "@/components/forms/AnswerForm";
 import Metric from "@/components/Metric";
+import SaveQuestion from "@/components/question/SaveQuestion";
 import UserAvatar from "@/components/UserAvatar";
 import Votes from "@/components/votes/Votes";
 import ROUTES from "@/constants/routes";
 import { getAnswers } from "@/lib/actions/answer.action";
+import { hasSavedQuestion } from "@/lib/actions/collection.action";
 import { getQuestion, incrementViews } from "@/lib/actions/question.action";
 import { hasVoted } from "@/lib/actions/vote.action";
 import { formatNumber, getTimeStamp } from "@/lib/utils";
@@ -122,13 +124,13 @@ const Question = async ({ params, searchParams }: RouteParams) => {
     targetType: "question",
   }); // we can pass this promise directly to the Votes component and let it handle the loading state and data when it resolves, this way we can show the question content immediately without waiting for the hasVoted check to complete, and the Votes component can show a loading state for the vote buttons until it knows whether the user has voted or not
 
-  // const hasSavedQuestionPromise = hasSavedQuestion({
-  //   questionId: question._id,
-  // });
+  const hasSavedQuestionPromise = hasSavedQuestion({
+    questionId: question._id,
+  });
 
   console.log(answersResult, "answers result in question page");
 
-  const { author, createdAt, answers, views, tags, content, title } = question;
+  // const { author, createdAt, answers, views, tags, content, title } = question;
   console.log(question, "question data in question page");
 
   return (
@@ -160,14 +162,14 @@ const Question = async ({ params, searchParams }: RouteParams) => {
                 hasVotedPromise={hasVotedPromise}
               />
             </Suspense>
-            {/* 
+            
 
             <Suspense fallback={<div>Loading...</div>}>
               <SaveQuestion
                 questionId={question._id}
                 hasSavedQuestionPromise={hasSavedQuestionPromise}
               />
-            </Suspense> */}
+            </Suspense>
           </div>
         </div>
 
