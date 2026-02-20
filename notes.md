@@ -1238,3 +1238,6 @@ logger
 
    aggregtion pipeline
    a series of steps that we aggregate togethere which means we pass the data through stages transforming as needed.give some data put in this format give some more data if query do that as well.
+
+
+   we want to track wht kind of content user is posting or are you interested in upvotes and downvotes thery voring or do sou simply want to knwo what kind of content there viewing
