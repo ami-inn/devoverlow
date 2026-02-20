@@ -7,6 +7,8 @@ import { cn, getTimeStamp } from "@/lib/utils";
 
 import { Preview } from "../editor/Preview";
 import UserAvatar from "../UserAvatar";
+import Votes from "../votes/Votes";
+import { hasVoted } from "@/lib/actions/vote.action";
 // import Votes from "../votes/Votes";
 // import EditDeleteAction from "../user/EditDeleteAction";
 
@@ -21,17 +23,17 @@ const AnswerCard = ({
   author,
   content,
   createdAt,
-  upvotes,
-  downvotes,
+  upVotes,
+  downVotes,
   question,
   containerClasses,
   showReadMore = false,
   showActionBtns = false,
 }: Props) => {
-//   const hasVotedPromise = hasVoted({
-//     targetId: _id,
-//     targetType: "answer",
-//   });
+  const hasVotedPromise = hasVoted({
+    targetId: _id,
+    targetType: "answer",
+  });
 
   return (
     <article
@@ -70,15 +72,15 @@ const AnswerCard = ({
         </div>
 
         <div className="flex justify-end">
-          {/* <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<div>Loading...</div>}>
             <Votes
               targetType="answer"
               targetId={_id}
               hasVotedPromise={hasVotedPromise}
-              upvotes={upvotes}
-              downvotes={downvotes}
+              upvotes={upVotes}
+              downvotes={downVotes}
             />
-          </Suspense> */}
+          </Suspense>
         </div>
       </div>
 

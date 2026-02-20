@@ -1226,3 +1226,12 @@ logger
    headover to openai website and create an account to get your api key for ai integration
 
    npm i ai @ai-sdk/openai
+
+
+   use hook
+   new hook introduced by react it help you to read the value of a resource'
+   like a promise or context or any other async data source in a way that is compatible with react's rendering process
+   it allows you to read the value of a resource and also subscribe to changes in that resource
+   it is designed to work with react's concurrent rendering features and can help you to avoid issues
+
+   if using await in server compoenent it will block its rendering until await statement finished.pasing a promise from blocking the renderinng of a server component.

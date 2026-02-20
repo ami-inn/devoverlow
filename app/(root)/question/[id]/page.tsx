@@ -4,14 +4,17 @@ import { Preview } from "@/components/editor/Preview";
 import AnswerForm from "@/components/forms/AnswerForm";
 import Metric from "@/components/Metric";
 import UserAvatar from "@/components/UserAvatar";
+import Votes from "@/components/votes/Votes";
 import ROUTES from "@/constants/routes";
 import { getAnswers } from "@/lib/actions/answer.action";
 import { getQuestion, incrementViews } from "@/lib/actions/question.action";
+import { hasVoted } from "@/lib/actions/vote.action";
 import { formatNumber, getTimeStamp } from "@/lib/utils";
 import { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
+import { Suspense } from "react";
 
 // const sampleQuestion = {
 //   _id: "question_id_123",
@@ -103,18 +106,30 @@ const Question = async ({ params, searchParams }: RouteParams) => {
   });
   if (!success || !question) return redirect("/404");
 
-  const {success:areAnswersLoaded,data:answersResult,error:answersError} = await getAnswers({
+  const {
+    success: areAnswersLoaded,
+    data: answersResult,
+    error: answersError,
+  } = await getAnswers({
     questionId: id,
     page: 1,
-    pageSize:  10,
-    filter: 'latest',
+    pageSize: 10,
+    filter: "latest",
   });
+
+  const hasVotedPromise = hasVoted({
+    targetId: question._id,
+    targetType: "question",
+  }); // we can pass this promise directly to the Votes component and let it handle the loading state and data when it resolves, this way we can show the question content immediately without waiting for the hasVoted check to complete, and the Votes component can show a loading state for the vote buttons until it knows whether the user has voted or not
+
+  // const hasSavedQuestionPromise = hasSavedQuestion({
+  //   questionId: question._id,
+  // });
 
   console.log(answersResult, "answers result in question page");
 
-  const {author,createdAt,answers,views,tags,content,title} = question
-
-
+  const { author, createdAt, answers, views, tags, content, title } = question;
+  console.log(question, "question data in question page");
 
   return (
     <>
@@ -136,15 +151,16 @@ const Question = async ({ params, searchParams }: RouteParams) => {
           </div>
 
           <div className="flex items-center justify-end gap-4">
-            {/* <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div>Loading...</div>}>
               <Votes
                 targetType="question"
-                upvotes={question.upvotes}
-                downvotes={question.downvotes}
+                upvotes={question.upVotes}
+                downvotes={question.downVotes}
                 targetId={question._id}
                 hasVotedPromise={hasVotedPromise}
               />
             </Suspense>
+            {/* 
 
             <Suspense fallback={<div>Loading...</div>}>
               <SaveQuestion
